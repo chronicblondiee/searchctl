@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Config
+current-context: "production"
+contexts:
+- name: "production"
+  context:
+    cluster: "prod-cluster"
+    user: "prod-user"
+- name: "development"
+  context:
+    cluster: "dev-cluster"
+    user: "dev-user"
+clusters:
+- name: "prod-cluster"
+  cluster:
+    server: "https://es-prod.example.com:9200"
+    certificate-authority: "/path/to/ca.crt"
+    insecure-skip-tls-verify: false
+- name: "dev-cluster"
+  cluster:
+    server: "http://localhost:9200"
+    insecure-skip-tls-verify: true
+users:
+- name: "prod-user"
+  user:
+    username: "elastic"
+    password: "password"
+- name: "dev-user"
+  user:
+    api-key: "base64-encoded-api-key"
