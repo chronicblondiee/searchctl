@@ -1,14 +1,15 @@
 package client
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"strings"
 
 	"github.com/chronicblondiee/searchctl/pkg/config"
-	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type SearchClient interface {
@@ -23,7 +24,11 @@ type SearchClient interface {
 }
 
 type Client struct {
-	es *elasticsearch.Client
+	httpClient *http.Client
+	baseURL    string
+	username   string
+	password   string
+	apiKey     string
 }
 
 type ClusterHealth struct {
@@ -90,48 +95,65 @@ func NewClient() (SearchClient, error) {
 		return nil, fmt.Errorf("failed to get user config: %w", err)
 	}
 
-	cfg := elasticsearch.Config{
-		Addresses: []string{cluster.Cluster.Server},
-	}
-
+	httpClient := &http.Client{}
+	
 	if cluster.Cluster.InsecureSkipTLSVerify {
-		cfg.Transport = &http.Transport{
+		httpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
 				InsecureSkipVerify: true,
 			},
 		}
 	}
 
-	if user.User.Username != "" && user.User.Password != "" {
-		cfg.Username = user.User.Username
-		cfg.Password = user.User.Password
+	client := &Client{
+		httpClient: httpClient,
+		baseURL:    strings.TrimSuffix(cluster.Cluster.Server, "/"),
+		username:   user.User.Username,
+		password:   user.User.Password,
+		apiKey:     user.User.APIKey,
 	}
 
-	if user.User.APIKey != "" {
-		cfg.APIKey = user.User.APIKey
-	}
-
-	es, err := elasticsearch.NewClient(cfg)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create elasticsearch client: %w", err)
-	}
-
-	return &Client{es: es}, nil
+	return client, nil
 }
 
-func (c *Client) ClusterHealth() (*ClusterHealth, error) {
-	res, err := c.es.Cluster.Health()
+func (c *Client) makeRequest(method, path string, body []byte) (*http.Response, error) {
+	url := c.baseURL + path
+	
+	var reqBody io.Reader
+	if body != nil {
+		reqBody = bytes.NewBuffer(body)
+	}
+	
+	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	
+	req.Header.Set("Content-Type", "application/json")
+	
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "ApiKey "+c.apiKey)
+	} else if c.username != "" && c.password != "" {
+		req.SetBasicAuth(c.username, c.password)
+	}
+	
+	return c.httpClient.Do(req)
+}
 
-	if res.IsError() {
-		return nil, fmt.Errorf("error getting cluster health: %s", res.String())
+func (c *Client) ClusterHealth() (*ClusterHealth, error) {
+	resp, err := c.makeRequest("GET", "/_cluster/health", nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting cluster health: %s", string(body))
 	}
 
 	var health ClusterHealth
-	if err := json.NewDecoder(res.Body).Decode(&health); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&health); err != nil {
 		return nil, err
 	}
 
@@ -139,18 +161,19 @@ func (c *Client) ClusterHealth() (*ClusterHealth, error) {
 }
 
 func (c *Client) ClusterInfo() (*ClusterInfo, error) {
-	res, err := c.es.Info()
+	resp, err := c.makeRequest("GET", "/", nil)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	if res.IsError() {
-		return nil, fmt.Errorf("error getting cluster info: %s", res.String())
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting cluster info: %s", string(body))
 	}
 
 	var info ClusterInfo
-	if err := json.NewDecoder(res.Body).Decode(&info); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
 		return nil, err
 	}
 
@@ -162,23 +185,21 @@ func (c *Client) GetIndices(pattern string) ([]Index, error) {
 	if pattern != "" {
 		indexPattern = pattern
 	}
-
-	res, err := c.es.Cat.Indices(
-		c.es.Cat.Indices.WithIndex(indexPattern),
-		c.es.Cat.Indices.WithFormat("json"),
-		c.es.Cat.Indices.WithH("index,health,status,uuid,pri,rep,docs.count,docs.deleted,store.size,pri.store.size"),
-	)
+	
+	path := fmt.Sprintf("/_cat/indices/%s?format=json&h=index,health,status,uuid,pri,rep,docs.count,docs.deleted,store.size,pri.store.size", indexPattern)
+	resp, err := c.makeRequest("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	if res.IsError() {
-		return nil, fmt.Errorf("error getting indices: %s", res.String())
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting indices: %s", string(body))
 	}
 
 	var indices []Index
-	if err := json.NewDecoder(res.Body).Decode(&indices); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&indices); err != nil {
 		return nil, err
 	}
 
@@ -201,58 +222,60 @@ func (c *Client) GetIndex(name string) (*Index, error) {
 }
 
 func (c *Client) CreateIndex(name string, body map[string]interface{}) error {
-	var bodyReader *strings.Reader
+	var bodyBytes []byte
 	if body != nil {
-		bodyBytes, err := json.Marshal(body)
+		var err error
+		bodyBytes, err = json.Marshal(body)
 		if err != nil {
 			return err
 		}
-		bodyReader = strings.NewReader(string(bodyBytes))
 	}
 
-	res, err := c.es.Indices.Create(name, c.es.Indices.Create.WithBody(bodyReader))
+	path := fmt.Sprintf("/%s", name)
+	resp, err := c.makeRequest("PUT", path, bodyBytes)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	if res.IsError() {
-		return fmt.Errorf("error creating index: %s", res.String())
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error creating index: %s", string(body))
 	}
 
 	return nil
 }
 
 func (c *Client) DeleteIndex(name string) error {
-	res, err := c.es.Indices.Delete([]string{name})
+	path := fmt.Sprintf("/%s", name)
+	resp, err := c.makeRequest("DELETE", path, nil)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	if res.IsError() {
-		return fmt.Errorf("error deleting index: %s", res.String())
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error deleting index: %s", string(body))
 	}
 
 	return nil
 }
 
 func (c *Client) GetNodes() ([]Node, error) {
-	res, err := c.es.Cat.Nodes(
-		c.es.Cat.Nodes.WithFormat("json"),
-		c.es.Cat.Nodes.WithH("name,host,ip,heap.percent,ram.percent,cpu,load_1m,load_5m,load_15m,node.role,master"),
-	)
+	resp, err := c.makeRequest("GET", "/_cat/nodes?format=json&h=name,host,ip,heap.percent,ram.percent,cpu,load_1m,load_5m,load_15m,node.role,master", nil)
 	if err != nil {
 		return nil, err
 	}
-	defer res.Body.Close()
+	defer resp.Body.Close()
 
-	if res.IsError() {
-		return nil, fmt.Errorf("error getting nodes: %s", res.String())
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting nodes: %s", string(body))
 	}
 
 	var nodes []Node
-	if err := json.NewDecoder(res.Body).Decode(&nodes); err != nil {
+	if err := json.NewDecoder(resp.Body).Decode(&nodes); err != nil {
 		return nil, err
 	}
 

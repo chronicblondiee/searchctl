@@ -39,6 +39,18 @@ release:
 dev-deps:
 	go install github.com/goreleaser/goreleaser@latest
 
+test-integration:
+	@echo "Running integration tests..."
+	./scripts/integration-test.sh
+
+test-env-start:
+	@echo "Starting test environment..."
+	./scripts/start-test-env.sh
+
+test-env-stop:
+	@echo "Stopping test environment..."
+	./scripts/stop-test-env.sh
+
 deps:
 	go mod download
 	go mod tidy

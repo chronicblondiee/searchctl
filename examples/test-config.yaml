@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Config
+current-context: elasticsearch
+contexts:
+- name: elasticsearch
+  context:
+    cluster: elasticsearch-local
+    user: default
+- name: opensearch
+  context:
+    cluster: opensearch-local
+    user: default
+clusters:
+- name: elasticsearch-local
+  cluster:
+    server: http://localhost:9200
+    insecure-skip-tls-verify: true
+- name: opensearch-local
+  cluster:
+    server: http://localhost:9201
+    insecure-skip-tls-verify: true
+users:
+- name: default
+  user: {}

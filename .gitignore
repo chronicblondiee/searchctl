@@ -12,6 +12,9 @@
 bin/
 dist/
 
+# Test environment
+.env.test
+
 # Test binary, built with `go test -c`
 *.test
 
