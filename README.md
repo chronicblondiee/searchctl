@@ -96,6 +96,29 @@ searchctl get indices --context production
 
 - [Commands Reference](docs/commands.md)
 - [Configuration Guide](docs/configuration.md)
+- [Test Documentation](TEST_README.md)
+
+## Development
+
+### Building
+```bash
+make build
+```
+
+### Testing
+```bash
+make test              # Run all tests
+make test-coverage     # Run tests with coverage
+go test -v ./pkg/...   # Run specific package tests
+```
+
+### Code Quality
+```bash
+make fmt               # Format code
+make vet               # Run go vet
+make lint              # Run linter (requires golangci-lint)
+make check             # Run fmt, vet, lint, and test
+```
 
 ## License
 

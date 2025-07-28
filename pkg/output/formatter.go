@@ -58,7 +58,7 @@ func (f *TableFormatter) formatSlice(data []interface{}, w *tabwriter.Writer) er
 		for k := range first.(map[string]interface{}) {
 			headers = append(headers, k)
 		}
-		
+
 		// Print headers
 		for i, header := range headers {
 			if i > 0 {

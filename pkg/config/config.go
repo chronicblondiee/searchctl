@@ -33,9 +33,9 @@ type Cluster struct {
 }
 
 type ClusterConfig struct {
-	Server                   string `yaml:"server"`
-	CertificateAuthority     string `yaml:"certificate-authority,omitempty"`
-	InsecureSkipTLSVerify    bool   `yaml:"insecure-skip-tls-verify,omitempty"`
+	Server                string `yaml:"server"`
+	CertificateAuthority  string `yaml:"certificate-authority,omitempty"`
+	InsecureSkipTLSVerify bool   `yaml:"insecure-skip-tls-verify,omitempty"`
 }
 
 type User struct {
@@ -101,7 +101,7 @@ func createDefaultConfig() error {
 			{
 				Name: "default",
 				Cluster: ClusterConfig{
-					Server: "http://localhost:9200",
+					Server:                "http://localhost:9200",
 					InsecureSkipTLSVerify: true,
 				},
 			},

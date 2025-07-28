@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/chronicblondiee/searchctl/pkg/output"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewClusterCmd() *cobra.Command {

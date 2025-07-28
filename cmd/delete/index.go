@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/chronicblondiee/searchctl/pkg/client"
 )
 
 func NewDeleteIndexCmd() *cobra.Command {
@@ -20,7 +20,7 @@ func NewDeleteIndexCmd() *cobra.Command {
 			indexName := args[0]
 
 			if viper.GetBool("dry-run") {
-				fmt.Printf("Would delete index: %s\n", indexName)
+				cmd.Printf("Would delete index: %s\n", indexName)
 				return
 			}
 
@@ -35,7 +35,7 @@ func NewDeleteIndexCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			fmt.Printf("Index %s deleted successfully\n", indexName)
+			cmd.Printf("Index %s deleted successfully\n", indexName)
 		},
 	}
 

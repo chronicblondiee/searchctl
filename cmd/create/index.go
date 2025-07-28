@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-	"github.com/chronicblondiee/searchctl/pkg/client"
 )
 
 func NewCreateIndexCmd() *cobra.Command {
@@ -20,7 +20,7 @@ func NewCreateIndexCmd() *cobra.Command {
 			indexName := args[0]
 
 			if viper.GetBool("dry-run") {
-				fmt.Printf("Would create index: %s\n", indexName)
+				cmd.Printf("Would create index: %s\n", indexName)
 				return
 			}
 
@@ -35,7 +35,7 @@ func NewCreateIndexCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			fmt.Printf("Index %s created successfully\n", indexName)
+			cmd.Printf("Index %s created successfully\n", indexName)
 		},
 	}
 

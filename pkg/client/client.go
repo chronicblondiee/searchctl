@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/chronicblondiee/searchctl/pkg/config"
+	"github.com/elastic/go-elasticsearch/v8"
 )
 
 type SearchClient interface {
@@ -48,30 +48,30 @@ type ClusterInfo struct {
 }
 
 type Index struct {
-	Name     string                 `json:"index"`
-	Health   string                 `json:"health"`
-	Status   string                 `json:"status"`
-	UUID     string                 `json:"uuid"`
-	Primary  string                 `json:"pri"`
-	Replica  string                 `json:"rep"`
-	DocsCount string                `json:"docs.count"`
-	DocsDeleted string              `json:"docs.deleted"`
-	StoreSize string                `json:"store.size"`
-	PrimaryStoreSize string         `json:"pri.store.size"`
+	Name             string `json:"index"`
+	Health           string `json:"health"`
+	Status           string `json:"status"`
+	UUID             string `json:"uuid"`
+	Primary          string `json:"pri"`
+	Replica          string `json:"rep"`
+	DocsCount        string `json:"docs.count"`
+	DocsDeleted      string `json:"docs.deleted"`
+	StoreSize        string `json:"store.size"`
+	PrimaryStoreSize string `json:"pri.store.size"`
 }
 
 type Node struct {
-	Name             string  `json:"name"`
-	Host             string  `json:"host"`
-	IP               string  `json:"ip"`
-	HeapPercent      string  `json:"heap.percent"`
-	RAMPercent       string  `json:"ram.percent"`
-	CPU              string  `json:"cpu"`
-	Load1m           string  `json:"load_1m"`
-	Load5m           string  `json:"load_5m"`
-	Load15m          string  `json:"load_15m"`
-	NodeRole         string  `json:"node.role"`
-	Master           string  `json:"master"`
+	Name        string `json:"name"`
+	Host        string `json:"host"`
+	IP          string `json:"ip"`
+	HeapPercent string `json:"heap.percent"`
+	RAMPercent  string `json:"ram.percent"`
+	CPU         string `json:"cpu"`
+	Load1m      string `json:"load_1m"`
+	Load5m      string `json:"load_5m"`
+	Load15m     string `json:"load_15m"`
+	NodeRole    string `json:"node.role"`
+	Master      string `json:"master"`
 }
 
 func NewClient() (SearchClient, error) {

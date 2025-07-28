@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
-	"github.com/chronicblondiee/searchctl/cmd/get"
-	"github.com/chronicblondiee/searchctl/cmd/describe"
 	"github.com/chronicblondiee/searchctl/cmd/create"
 	"github.com/chronicblondiee/searchctl/cmd/delete"
+	"github.com/chronicblondiee/searchctl/cmd/describe"
+	"github.com/chronicblondiee/searchctl/cmd/get"
 	"github.com/chronicblondiee/searchctl/pkg/config"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -38,6 +38,10 @@ func Execute() {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
+}
+
+func NewRootCmd() *cobra.Command {
+	return rootCmd
 }
 
 func init() {

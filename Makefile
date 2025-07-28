@@ -1,9 +1,9 @@
-.PHONY: build test install clean release dev-deps
+.PHONY: build test test-unit test-integration install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
-VERSION=$(shell git describe --tags --always --dirty)
-COMMIT=$(shell git rev-parse HEAD)
+VERSION=$(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COMMIT=$(shell git rev-parse HEAD 2>/dev/null || echo "unknown")
 DATE=$(shell date -u +"%Y-%m-%dT%H:%M:%SZ")
 LDFLAGS=-ldflags "-X github.com/chronicblondiee/searchctl/internal/version.Version=$(VERSION) -X github.com/chronicblondiee/searchctl/internal/version.Commit=$(COMMIT) -X github.com/chronicblondiee/searchctl/internal/version.Date=$(DATE)"
 
@@ -11,14 +11,27 @@ build:
 	mkdir -p bin
 	go build $(LDFLAGS) -o bin/$(BINARY_NAME) .
 
-test:
-	go test ./...
+test: test-unit
+
+test-unit:
+	@echo "Running unit tests..."
+	go test -v ./pkg/... ./cmd/... ./internal/...
+
+test-coverage:
+	@echo "Running tests with coverage..."
+	go test -v -coverprofile=coverage.out ./pkg/... ./cmd/... ./internal/...
+	go tool cover -html=coverage.out -o coverage.html
+	@echo "Coverage report generated: coverage.html"
+
+test-short:
+	go test -short ./pkg/... ./cmd/... ./internal/...
 
 install:
 	go install $(LDFLAGS) .
 
 clean:
 	rm -rf bin/
+	rm -f coverage.out coverage.html
 
 release:
 	goreleaser release --rm-dist
@@ -32,5 +45,13 @@ deps:
 
 lint:
 	golangci-lint run
+
+fmt:
+	go fmt ./...
+
+vet:
+	go vet ./...
+
+check: fmt vet lint test
 
 .DEFAULT_GOAL := build

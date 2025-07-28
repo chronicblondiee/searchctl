@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/spf13/cobra"
-	"github.com/spf13/viper"
 	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/chronicblondiee/searchctl/pkg/output"
+	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 func NewDescribeIndexCmd() *cobra.Command {
@@ -33,15 +33,15 @@ func NewDescribeIndexCmd() *cobra.Command {
 			}
 
 			data := map[string]interface{}{
-				"Name":              index.Name,
-				"Health":            index.Health,
-				"Status":            index.Status,
-				"UUID":              index.UUID,
-				"Primary Shards":    index.Primary,
-				"Replica Shards":    index.Replica,
-				"Documents Count":   index.DocsCount,
-				"Documents Deleted": index.DocsDeleted,
-				"Store Size":        index.StoreSize,
+				"Name":               index.Name,
+				"Health":             index.Health,
+				"Status":             index.Status,
+				"UUID":               index.UUID,
+				"Primary Shards":     index.Primary,
+				"Replica Shards":     index.Replica,
+				"Documents Count":    index.DocsCount,
+				"Documents Deleted":  index.DocsDeleted,
+				"Store Size":         index.StoreSize,
 				"Primary Store Size": index.PrimaryStoreSize,
 			}
 
