@@ -4,7 +4,7 @@ metadata:
   name: logs-template
 spec:
   index_patterns:
-    - "logs-*"
+  - "logs-*"
   template:
     settings:
       number_of_shards: 1
