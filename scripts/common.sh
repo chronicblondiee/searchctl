@@ -288,10 +288,33 @@ delete_test_index_template() {
     curl -s -X DELETE "localhost:$port/_index_template/$template_name" >/dev/null 2>&1 || true
 }
 
+# Apply an index template from a YAML file using searchctl apply
+apply_test_index_template() {
+    local context="$1"
+    local template_file="$2"
+    local template_name="${3:-}"
+    
+    log_info "Applying index template from '$template_file' for $context..."
+    
+    if [[ ! -f "$template_file" ]]; then
+        log_error "Template file '$template_file' not found"
+        return 1
+    fi
+    
+    # Apply the template using searchctl apply command
+    if ./bin/searchctl --context "$context" apply -f "$template_file" >/dev/null 2>&1; then
+        log_success "Index template applied successfully from $template_file"
+        return 0
+    else
+        log_error "Failed to apply index template from $template_file"
+        return 1
+    fi
+}
+
 # Export functions for use in other scripts
 export -f log_info log_success log_error log_test
 export -f setup_test_environment time_command test_command
 export -f wait_for_service cleanup_test_data check_environment
 export -f test_both_engines benchmark_command
 export -f validate_json validate_yaml print_usage setup_cleanup_trap
-export -f create_test_index_template delete_test_index_template
+export -f create_test_index_template delete_test_index_template apply_test_index_template

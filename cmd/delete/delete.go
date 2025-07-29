@@ -13,6 +13,7 @@ func NewDeleteCmd() *cobra.Command {
 
 	cmd.AddCommand(NewDeleteIndexCmd())
 	cmd.AddCommand(NewDeleteDataStreamCmd())
+	cmd.AddCommand(NewDeleteIndexTemplateCmd())
 
 	return cmd
 }
