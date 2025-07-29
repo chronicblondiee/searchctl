@@ -37,4 +37,18 @@ echo "🧪 Creating test indices..."
 ./bin/searchctl --context elasticsearch create index test-es-index --dry-run
 ./bin/searchctl --context opensearch create index test-os-index --dry-run
 
+echo "📋 Testing data streams..."
+./bin/searchctl --context elasticsearch get datastreams
+./bin/searchctl --context opensearch get datastreams
+
+echo "🧪 Testing data stream operations..."
+./bin/searchctl --context elasticsearch create datastream test-logs --dry-run
+./bin/searchctl --context opensearch create datastream test-logs --dry-run
+./bin/searchctl --context elasticsearch delete datastream test-logs --dry-run
+./bin/searchctl --context opensearch delete datastream test-logs --dry-run
+
+echo "🔄 Testing rollover commands (dry-run)..."
+./bin/searchctl --context elasticsearch rollover datastream logs-test --dry-run --max-age 7d --max-docs 1000
+./bin/searchctl --context opensearch rollover datastream logs-test --dry-run --max-age 7d --max-docs 1000
+
 echo "✅ Integration tests completed successfully!"

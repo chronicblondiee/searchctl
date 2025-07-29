@@ -22,6 +22,8 @@ type SearchClient interface {
 	GetNodes() ([]Node, error)
 	GetNode(nodeID string) (*Node, error)
 	GetDataStreams(pattern string) ([]DataStream, error)
+	CreateDataStream(name string) error
+	DeleteDataStream(name string) error
 	RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*RolloverResponse, error)
 }
 
@@ -348,6 +350,38 @@ func (c *Client) GetDataStreams(pattern string) ([]DataStream, error) {
 	}
 
 	return response.DataStreams, nil
+}
+
+func (c *Client) CreateDataStream(name string) error {
+	path := fmt.Sprintf("/_data_stream/%s", name)
+	resp, err := c.makeRequest("PUT", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error creating data stream: %s", string(body))
+	}
+
+	return nil
+}
+
+func (c *Client) DeleteDataStream(name string) error {
+	path := fmt.Sprintf("/_data_stream/%s", name)
+	resp, err := c.makeRequest("DELETE", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error deleting data stream: %s", string(body))
+	}
+
+	return nil
 }
 
 func (c *Client) RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*RolloverResponse, error) {

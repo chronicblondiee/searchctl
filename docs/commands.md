@@ -110,6 +110,22 @@ searchctl create index new-logs
 searchctl create index test-index --dry-run
 ```
 
+#### create datastream
+```bash
+searchctl create datastream DATA_STREAM_NAME [flags]
+```
+
+**Aliases:** `ds`
+
+**Examples:**
+```bash
+# Create new data stream
+searchctl create datastream logs-nginx
+
+# Dry run creation
+searchctl create datastream logs-test --dry-run
+```
+
 ### delete
 
 Delete resources from the cluster.
@@ -128,6 +144,22 @@ searchctl delete index old-logs
 
 # Dry run deletion
 searchctl delete index temp-index --dry-run
+```
+
+#### delete datastream
+```bash
+searchctl delete datastream DATA_STREAM_NAME [flags]
+```
+
+**Aliases:** `ds`
+
+**Examples:**
+```bash
+# Delete data stream and all backing indices
+searchctl delete datastream old-logs
+
+# Dry run deletion
+searchctl delete datastream temp-stream --dry-run
 ```
 
 ### apply

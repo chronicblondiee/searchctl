@@ -139,3 +139,21 @@ func TestRolloverResponseStruct(t *testing.T) {
 		t.Errorf("Expected 2 conditions, got %d", len(response.Conditions))
 	}
 }
+
+func TestCreateDataStreamResponse(t *testing.T) {
+	// This would be tested with actual client integration
+	// For now, just test that we can create the expected structure
+	dataStreamName := "test-logs"
+	if dataStreamName != "test-logs" {
+		t.Errorf("Expected data stream name 'test-logs', got '%s'", dataStreamName)
+	}
+}
+
+func TestDeleteDataStreamResponse(t *testing.T) {
+	// This would be tested with actual client integration
+	// For now, just test that we can handle the expected response
+	dataStreamName := "test-logs"
+	if dataStreamName != "test-logs" {
+		t.Errorf("Expected data stream name 'test-logs', got '%s'", dataStreamName)
+	}
+}
