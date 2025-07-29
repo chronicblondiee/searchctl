@@ -80,7 +80,25 @@ func InitConfig(cfgFile string) error {
 		return err
 	}
 
-	return viper.Unmarshal(&config)
+	// Use direct viper access for hyphenated keys since viper may not unmarshal them correctly
+	config = &Config{
+		APIVersion:     viper.GetString("apiVersion"),
+		Kind:           viper.GetString("kind"),
+		CurrentContext: viper.GetString("current-context"),
+	}
+
+	// Unmarshal complex structures
+	if err := viper.UnmarshalKey("contexts", &config.Contexts); err != nil {
+		return err
+	}
+	if err := viper.UnmarshalKey("clusters", &config.Clusters); err != nil {
+		return err
+	}
+	if err := viper.UnmarshalKey("users", &config.Users); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func createDefaultConfig() error {
@@ -127,9 +145,14 @@ func GetCurrentContext() (*Context, error) {
 		return nil, fmt.Errorf("config not initialized")
 	}
 
-	currentContextName := viper.GetString("context")
+	// Check if context was explicitly set via flag, otherwise use config's current context
+	currentContextName := config.CurrentContext
+	if viper.IsSet("context") && viper.GetString("context") != "" {
+		currentContextName = viper.GetString("context")
+	}
+
 	if currentContextName == "" {
-		currentContextName = config.CurrentContext
+		return nil, fmt.Errorf("no current context available")
 	}
 
 	for _, ctx := range config.Contexts {
