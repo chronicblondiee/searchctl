@@ -90,8 +90,11 @@ func TestNodeStruct(t *testing.T) {
 func TestDataStreamStruct(t *testing.T) {
 	dataStream := client.DataStream{
 		Name:               "logs-nginx",
-		Timestamp:          "@timestamp",
-		Indices:            []string{"logs-nginx-000001", "logs-nginx-000002"},
+		TimestampField:     client.TimestampFieldType{Name: "@timestamp"},
+		Indices:            []client.DataStreamIndex{
+			{IndexName: "logs-nginx-000001", IndexUUID: "uuid1"},
+			{IndexName: "logs-nginx-000002", IndexUUID: "uuid2"},
+		},
 		Generation:         2,
 		Status:             "green",
 		Template:           "logs-nginx-template",
@@ -109,6 +112,9 @@ func TestDataStreamStruct(t *testing.T) {
 	}
 	if len(dataStream.Indices) != 2 {
 		t.Errorf("Expected 2 indices, got %d", len(dataStream.Indices))
+	}
+	if dataStream.TimestampField.Name != "@timestamp" {
+		t.Errorf("Expected timestamp field '@timestamp', got '%s'", dataStream.TimestampField.Name)
 	}
 }
 

@@ -84,16 +84,27 @@ type Node struct {
 }
 
 type DataStream struct {
-	Name               string   `json:"name"`
-	Timestamp          string   `json:"timestamp_field"`
-	Indices            []string `json:"indices"`
-	Generation         int      `json:"generation"`
-	Status             string   `json:"status"`
-	Template           string   `json:"template,omitempty"`
-	IlmPolicy          string   `json:"ilm_policy,omitempty"`
-	Hidden             bool     `json:"hidden,omitempty"`
-	System             bool     `json:"system,omitempty"`
-	AllowCustomRouting bool     `json:"allow_custom_routing,omitempty"`
+	Name               string              `json:"name"`
+	TimestampField     TimestampFieldType  `json:"timestamp_field"`
+	Indices            []DataStreamIndex   `json:"indices"`
+	Generation         int                 `json:"generation"`
+	Status             string              `json:"status"`
+	Template           string              `json:"template,omitempty"`
+	IlmPolicy          string              `json:"ilm_policy,omitempty"`
+	Hidden             bool                `json:"hidden,omitempty"`
+	System             bool                `json:"system,omitempty"`
+	AllowCustomRouting bool                `json:"allow_custom_routing,omitempty"`
+}
+
+type TimestampFieldType struct {
+	Name string `json:"name"`
+}
+
+type DataStreamIndex struct {
+	IndexName   string `json:"index_name"`
+	IndexUUID   string `json:"index_uuid"`
+	PreferILM   bool   `json:"prefer_ilm,omitempty"`
+	ManagedBy   string `json:"managed_by,omitempty"`
 }
 
 type RolloverResponse struct {

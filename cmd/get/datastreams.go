@@ -37,13 +37,19 @@ func NewGetDataStreamsCmd() *cobra.Command {
 			// Convert to interface{} slice for formatting
 			data := make([]interface{}, len(dataStreams))
 			for i, ds := range dataStreams {
+				indicesCount := len(ds.Indices)
+				indicesNames := make([]string, len(ds.Indices))
+				for j, idx := range ds.Indices {
+					indicesNames[j] = idx.IndexName
+				}
+				
 				data[i] = map[string]interface{}{
 					"NAME":       ds.Name,
 					"STATUS":     ds.Status,
-					"INDICES":    len(ds.Indices),
+					"INDICES":    indicesCount,
 					"GENERATION": ds.Generation,
 					"TEMPLATE":   ds.Template,
-					"ILM_POLICY": ds.IlmPolicy,
+					"TIMESTAMP":  ds.TimestampField.Name,
 				}
 			}
 
