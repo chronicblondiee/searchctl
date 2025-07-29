@@ -12,6 +12,7 @@ func NewCreateCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewCreateIndexCmd())
+	cmd.AddCommand(NewCreateDataStreamCmd())
 
 	return cmd
 }

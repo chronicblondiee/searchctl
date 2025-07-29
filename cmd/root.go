@@ -8,6 +8,7 @@ import (
 	"github.com/chronicblondiee/searchctl/cmd/delete"
 	"github.com/chronicblondiee/searchctl/cmd/describe"
 	"github.com/chronicblondiee/searchctl/cmd/get"
+	"github.com/chronicblondiee/searchctl/cmd/rollover"
 	"github.com/chronicblondiee/searchctl/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -61,6 +62,7 @@ func init() {
 	rootCmd.AddCommand(describe.NewDescribeCmd())
 	rootCmd.AddCommand(create.NewCreateCmd())
 	rootCmd.AddCommand(delete.NewDeleteCmd())
+	rootCmd.AddCommand(rollover.NewRolloverCmd())
 	rootCmd.AddCommand(NewApplyCmd())
 	rootCmd.AddCommand(NewConfigCmd())
 	rootCmd.AddCommand(NewClusterCmd())

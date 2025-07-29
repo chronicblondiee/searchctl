@@ -51,6 +51,25 @@ searchctl get nodes
 searchctl get nodes -o wide
 ```
 
+#### get datastreams
+```bash
+searchctl get datastreams [PATTERN] [flags]
+```
+
+**Aliases:** `datastream`, `ds`
+
+**Examples:**
+```bash
+# List all data streams
+searchctl get datastreams
+
+# List data streams matching pattern
+searchctl get datastreams logs-*
+
+# Output as JSON
+searchctl get datastreams -o json
+```
+
 ### describe
 
 Show detailed information about specific resources.
@@ -91,6 +110,22 @@ searchctl create index new-logs
 searchctl create index test-index --dry-run
 ```
 
+#### create datastream
+```bash
+searchctl create datastream DATA_STREAM_NAME [flags]
+```
+
+**Aliases:** `ds`
+
+**Examples:**
+```bash
+# Create new data stream
+searchctl create datastream logs-nginx
+
+# Dry run creation
+searchctl create datastream logs-test --dry-run
+```
+
 ### delete
 
 Delete resources from the cluster.
@@ -111,6 +146,22 @@ searchctl delete index old-logs
 searchctl delete index temp-index --dry-run
 ```
 
+#### delete datastream
+```bash
+searchctl delete datastream DATA_STREAM_NAME [flags]
+```
+
+**Aliases:** `ds`
+
+**Examples:**
+```bash
+# Delete data stream and all backing indices
+searchctl delete datastream old-logs
+
+# Dry run deletion
+searchctl delete datastream temp-stream --dry-run
+```
+
 ### apply
 
 Apply configurations from files.
@@ -129,6 +180,50 @@ searchctl apply -f index-template.yaml
 
 # Dry run apply
 searchctl apply -f config.yaml --dry-run
+```
+
+### rollover
+
+Rollover data streams to create new backing indices.
+
+#### rollover datastream
+```bash
+searchctl rollover datastream DATA_STREAM_NAME [flags]
+```
+
+**Aliases:** `ds`
+
+**Flags:**
+- `--max-age` - Maximum age before rollover (e.g., 30d, 1h)
+- `--max-docs` - Maximum number of documents before rollover
+- `--max-size` - Maximum index size before rollover (e.g., 50gb, 5gb)
+- `--max-primary-shard-size` - Maximum primary shard size before rollover (e.g., 50gb)
+- `--max-primary-shard-docs` - Maximum number of documents in primary shard before rollover
+- `--lazy` - Only mark data stream for rollover at next write (data streams only)
+- `-f, --conditions-file` - JSON file containing rollover conditions
+
+**Examples:**
+```bash
+# Rollover based on age and document count
+searchctl rollover datastream logs-nginx --max-age 7d --max-docs 1000000
+
+# Rollover based on size
+searchctl rollover datastream logs-app --max-size 50gb
+
+# Rollover based on primary shard docs
+searchctl rollover datastream logs-metrics --max-primary-shard-docs 500000
+
+# Lazy rollover (mark for rollover at next write)
+searchctl rollover datastream logs-system --lazy --max-age 1d
+
+# Rollover using conditions file
+searchctl rollover datastream logs-system -f rollover-conditions.json
+
+# Dry run rollover
+searchctl rollover datastream logs-test --dry-run --max-age 1d
+
+# Output as JSON
+searchctl rollover datastream logs-metrics --max-docs 500000 -o json
 ```
 
 ## Cluster Commands
