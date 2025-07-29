@@ -1,4 +1,4 @@
-.PHONY: build test test-unit test-integration install clean release dev-deps
+.PHONY: build test test-unit test-integration test-all test-rollover test-performance start-test-env stop-test-env install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
@@ -16,6 +16,31 @@ test: test-unit
 test-unit:
 	@echo "Running unit tests..."
 	go test -v ./pkg/... ./cmd/... ./internal/...
+
+test-integration:
+	@echo "Running integration tests..."
+	./scripts/integration-test.sh
+
+test-rollover:
+	@echo "Running rollover tests..."
+	./scripts/test-rollover.sh
+
+test-performance:
+	@echo "Running performance tests..."
+	./scripts/test-performance.sh
+
+test-all: test-unit test-integration test-rollover test-performance
+	@echo "All tests completed!"
+
+start-test-env:
+	@echo "Starting test environment..."
+	./scripts/start-test-env.sh
+
+stop-test-env:
+	@echo "Stopping test environment..."
+	./scripts/stop-test-env.sh
+
+test-env: start-test-env test-integration stop-test-env
 
 test-coverage:
 	@echo "Running tests with coverage..."
