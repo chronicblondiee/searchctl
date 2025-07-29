@@ -42,7 +42,7 @@ func NewGetDataStreamsCmd() *cobra.Command {
 				for j, idx := range ds.Indices {
 					indicesNames[j] = idx.IndexName
 				}
-				
+
 				data[i] = map[string]interface{}{
 					"NAME":       ds.Name,
 					"STATUS":     ds.Status,
