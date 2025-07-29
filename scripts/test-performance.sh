@@ -18,33 +18,33 @@ run_performance_tests() {
     time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d" \
         "Basic rollover (dry-run)"
     
-    time_command "Complex rollover with multiple conditions (dry-run)" \
-        ./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 30d --max-docs 1000000 --max-size 50gb --max-primary-shard-docs 500000
+    time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 30d --max-docs 1000000 --max-size 50gb --max-primary-shard-docs 500000" \
+        "Complex rollover with multiple conditions (dry-run)"
     
-    time_command "Rollover with conditions file (dry-run)" \
-        ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f examples/rollover-conditions.json
+    time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run -f examples/rollover-conditions.json" \
+        "Rollover with conditions file (dry-run)"
     
-    time_command "Get datastreams" \
-        ./bin/searchctl --context $context get datastreams
+    time_command "./bin/searchctl --context $context get datastreams" \
+        "Get datastreams"
     
-    time_command "Get datastreams with pattern" \
-        ./bin/searchctl --context $context get datastreams "test-*"
+    time_command "./bin/searchctl --context $context get datastreams \"test-*\"" \
+        "Get datastreams with pattern"
     
-    time_command "Create datastream (dry-run)" \
-        ./bin/searchctl --context $context create datastream perf-test-stream --dry-run
+    time_command "./bin/searchctl --context $context create datastream perf-test-stream --dry-run" \
+        "Create datastream (dry-run)"
     
-    time_command "Delete datastream (dry-run)" \
-        ./bin/searchctl --context $context delete datastream perf-test-stream --dry-run
+    time_command "./bin/searchctl --context $context delete datastream perf-test-stream --dry-run" \
+        "Delete datastream (dry-run)"
     
     # Test output format performance
-    time_command "Rollover with JSON output (dry-run)" \
-        ./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d -o json
+    time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d -o json" \
+        "Rollover with JSON output (dry-run)"
     
-    time_command "Rollover with YAML output (dry-run)" \
-        ./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d -o yaml
+    time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d -o yaml" \
+        "Rollover with YAML output (dry-run)"
     
-    time_command "Get datastreams JSON output" \
-        ./bin/searchctl --context $context get datastreams -o json
+    time_command "./bin/searchctl --context $context get datastreams -o json" \
+        "Get datastreams JSON output"
 }
 
 # Function to test concurrent operations
