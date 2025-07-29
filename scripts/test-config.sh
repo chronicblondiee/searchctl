@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🔧 Testing searchctl configuration..."
+echo "[CONFIG] Testing searchctl configuration..."
 
 echo "1. Testing config view with explicit config file:"
 ./bin/searchctl --config examples/test-config.yaml config view

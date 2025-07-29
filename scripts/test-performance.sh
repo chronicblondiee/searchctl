@@ -1,32 +1,22 @@
 #!/bin/bash
 set -e
 
-echo "🚀 Performance testing SearchCtl rollover commands..."
+# Source common utilities
+source "$(dirname "$0")/common.sh"
 
-# Set test config
-export SEARCHCTL_CONFIG="examples/test-config.yaml"
+echo "[PERFORMANCE] Testing SearchCtl rollover commands..."
 
-# Build searchctl
-echo "🔨 Building searchctl..."
-make build
-
-# Function to time a command
-time_command() {
-    local description="$1"
-    shift
-    echo "⏱️  Timing: $description"
-    time "$@"
-    echo ""
-}
+# Set up test environment
+setup_test_environment
 
 # Function to run performance tests
 run_performance_tests() {
     local context=$1
-    echo "🏃 Running performance tests for $context..."
+    log_info "Running performance tests for $context..."
     
     # Test rollover command performance
-    time_command "Basic rollover (dry-run)" \
-        ./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d
+    time_command "./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 7d" \
+        "Basic rollover (dry-run)"
     
     time_command "Complex rollover with multiple conditions (dry-run)" \
         ./bin/searchctl --context $context rollover datastream test-logs --dry-run --max-age 30d --max-docs 1000000 --max-size 50gb --max-primary-shard-docs 500000
@@ -60,7 +50,7 @@ run_performance_tests() {
 # Function to test concurrent operations
 test_concurrent_operations() {
     local context=$1
-    echo "🔀 Testing concurrent operations for $context..."
+    log_info "Testing concurrent operations for $context..."
     
     echo "Running 5 concurrent rollover operations..."
     for i in {1..5}; do
@@ -78,7 +68,7 @@ test_concurrent_operations() {
 # Function to stress test with many rapid commands
 stress_test() {
     local context=$1
-    echo "💪 Stress testing for $context..."
+    log_info "Stress testing for $context..."
     
     echo "Running 20 rapid rollover commands..."
     local start_time=$(date +%s)
@@ -93,37 +83,43 @@ stress_test() {
     echo "Average: $((duration * 1000 / 20))ms per command"
 }
 
-# Check if test environment is running
-echo "🏥 Checking test environment..."
-if ! curl -f http://localhost:9200/_cluster/health >/dev/null 2>&1; then
-    echo "❌ Elasticsearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
-    exit 1
-fi
+# Check environment and run tests
+check_environment
 
-if ! curl -f http://localhost:9201/_cluster/health >/dev/null 2>&1; then
-    echo "❌ OpenSearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
-    exit 1
-fi
-
-echo "✅ Test environment is ready"
-
-# Run performance tests
+# Test both engines
 echo ""
-echo "🔍 Elasticsearch performance tests..."
+log_info "Elasticsearch performance tests..."
 run_performance_tests "elasticsearch"
 test_concurrent_operations "elasticsearch"
 stress_test "elasticsearch"
 
 echo ""
-echo "🔍 OpenSearch performance tests..."
+log_info "OpenSearch performance tests..."
 run_performance_tests "opensearch"
 test_concurrent_operations "opensearch"
 stress_test "opensearch"
 
 echo ""
-echo "📊 Performance testing summary:"
-echo "✅ All performance tests completed"
-echo "💡 Check the timing results above for performance analysis"
-echo "🚀 The rollover functionality is ready for production use"
+log_info "Performance testing summary:"
+log_success "All performance tests completed"
+log_info "Check the timing results above for performance analysis"
+log_info "The rollover functionality is ready for production use"
+
+# Run performance tests
+echo ""
+log_info "Elasticsearch performance tests..."
+run_performance_tests "elasticsearch"
+test_concurrent_operations "elasticsearch"
+stress_test "elasticsearch"
+
+echo ""
+log_info "OpenSearch performance tests..."
+run_performance_tests "opensearch"
+test_concurrent_operations "opensearch"
+stress_test "opensearch"
+
+echo ""
+log_info "Performance testing summary:"
+log_success "All performance tests completed"
+log_info "Check the timing results above for performance analysis"
+log_info "The rollover functionality is ready for production use"

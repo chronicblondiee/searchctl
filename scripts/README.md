@@ -1,511 +1,260 @@
-# Test Scripts for SearchCtl Rollover and DataStream Features
+# Test Scripts
 
-This directory contains comprehensive test scripts for validating the rollover and datastream functionality in searchctl.
+Automated testing for searchctl functionality with emoji-free logging and shared utilities for better CI/CD compatibility.
 
-## Available Test Scripts
-
-### 🔧 `integration-test.sh`
-**Main integration test suite**
-- Tests basic functionality across Elasticsearch and OpenSearch
-- Validates core commands work correctly
-- Includes basic rollover and datastream testing
-- **Usage**: `./scripts/integration-test.sh`
-
-### 🔄 `test-rollover.sh`
-**Comprehensive rollover testing (dry-run mode)**
-- Tests all rollover conditions and parameters
-- Validates error handling and edge cases
-- Tests output formats and verbose mode
-- Safe to run (all operations in dry-run mode)
-- **Usage**: `./scripts/test-rollover.sh`
-
-### 🧪 `test-rollover-real.sh`
-**Real rollover operations with test data**
-- Creates actual index templates and data streams
-- Performs real rollover operations with test data
-- Tests with actual documents and indices
-- **Warning**: Creates and deletes test data streams
-- **Usage**: `./scripts/test-rollover-real.sh`
-
-### 🚀 `test-performance.sh`
-**Performance and stress testing**
-- Measures command execution times
-- Tests concurrent operations
-- Stress tests with rapid command execution
-- Provides performance benchmarks
-- **Usage**: `./scripts/test-performance.sh`
-
-### 📄 `test-conditions.sh`
-**Rollover conditions file testing**
-- Tests various condition file formats
-- Validates JSON parsing and error handling
-- Tests combinations of file and CLI parameters
-- **Usage**: `./scripts/test-conditions.sh`
-
-### 🏥 `start-test-env.sh`
-**Test environment setup**
-- Starts Elasticsearch and OpenSearch containers
-- Waits for services to be healthy
-- Required before running other tests
-- **Usage**: `./scripts/start-test-env.sh`
-
-### 🛑 `stop-test-env.sh`
-**Test environment cleanup**
-- Stops and removes test containers
-- Cleans up resources
-- **Usage**: `./scripts/stop-test-env.sh`
-
-### ✅ `check-status.sh`
-**Environment status check**
-- Checks container health status
-- Shows service availability
-- **Usage**: `./scripts/check-status.sh`
-
-## Test Features Covered
-
-### Rollover Commands
-- ✅ Basic rollover operations
-- ✅ All condition types (age, docs, size, primary shard size/docs)
-- ✅ Lazy rollover functionality
-- ✅ Conditions file support
-- ✅ Multiple output formats (table, json, yaml)
-- ✅ Dry-run mode
-- ✅ Verbose mode
-- ✅ Alias support (`rollover ds`)
-
-### DataStream Commands
-- ✅ Create datastream operations
-- ✅ Delete datastream operations
-- ✅ List datastreams with patterns
-- ✅ Multiple output formats
-- ✅ Dry-run mode
-- ✅ Alias support (`create ds`, `delete ds`, `get ds`)
-
-### Error Handling
-- ✅ Missing required arguments
-- ✅ Invalid condition formats
-- ✅ Non-existent files
-- ✅ Invalid JSON in conditions files
-- ✅ Network connectivity issues
-
-### Performance Testing
-- ✅ Command execution timing
-- ✅ Concurrent operation support
-- ✅ Stress testing with multiple rapid commands
-- ✅ Memory and resource usage validation
-
-## Prerequisites
-
-### System Requirements
-
-**Required Software:**
-- **Go 1.21+** - For building searchctl binary
-- **Container Runtime**: 
-  - Docker with docker-compose, OR
-  - Podman with podman-compose
-- **Command Line Tools**:
-  - `curl` - For API health checks and direct cluster communication
-  - `jq` - For JSON parsing and validation in test scripts
-  - `make` - For build automation (uses Makefile)
-
-**System Resources:**
-- **Memory**: Minimum 4GB RAM (2GB for containers + 2GB for host)
-- **Storage**: 5GB free disk space for container images and test data
-- **Network**: Ports 9200, 9201, 9300, 9301, 5601 must be available
-
-### Installation Verification
+## Quick Start
 
 ```bash
-# Check Go installation
-go version  # Should show 1.21 or higher
-
-# Check container runtime
-docker --version && docker-compose --version
-# OR
-podman --version && podman-compose --version
-
-# Check required tools
-curl --version
-jq --version
-make --version
-
-# Verify port availability
-netstat -tuln | grep -E ':(9200|9201|9300|9301|5601)\s'
-# Should show no existing bindings
-```
-
-### Container Runtime Setup
-
-#### Docker Setup
-```bash
-# Install Docker (Ubuntu/Debian)
-sudo apt update
-sudo apt install docker.io docker-compose
-
-# Add user to docker group (logout/login required)
-sudo usermod -aG docker $USER
-
-# Start Docker service
-sudo systemctl enable docker
-sudo systemctl start docker
-```
-
-#### Podman Setup (Alternative)
-```bash
-# Install Podman (Ubuntu/Debian)
-sudo apt update
-sudo apt install podman podman-compose
-
-# Enable rootless containers
-echo 'export DOCKER_HOST=unix:///run/user/$UID/podman/podman.sock' >> ~/.bashrc
-```
-
-### Initial Setup
-
-1. **Clone and Build**:
-   ```bash
-   git clone https://github.com/chronicblondiee/searchctl.git
-   cd searchctl
-   
-   # Build the binary
-   make build
-   # OR
-   go build -o searchctl .
-   ```
-
-2. **Start Test Environment**:
-   ```bash
-   ./scripts/start-test-env.sh
-   ```
-
-3. **Verify Environment**:
-   ```bash
-   ./scripts/check-status.sh
-   ```
-
-### Troubleshooting Setup
-
-#### Common Issues
-
-**Port Conflicts:**
-```bash
-# Check what's using the ports
-sudo netstat -tulpn | grep :9200
-sudo netstat -tulpn | grep :9201
-
-# Stop conflicting services
-sudo systemctl stop elasticsearch  # If system ES is running
-```
-
-**Container Startup Issues:**
-```bash
-# Check container logs
-docker logs searchctl-elasticsearch
-docker logs searchctl-opensearch
-
-# Check container status
-docker ps -a
-
-# Restart containers
-./scripts/stop-test-env.sh
-./scripts/start-test-env.sh
-```
-
-**Memory Issues:**
-```bash
-# Check available memory
-free -h
-
-# Reduce container memory (edit docker-compose.yml)
-# Change: "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-# To:     "ES_JAVA_OPTS=-Xms256m -Xmx256m"
-```
-
-**Permission Issues:**
-```bash
-# Make scripts executable
-chmod +x scripts/*.sh
-
-# Fix Docker permissions (if needed)
-sudo chown $USER:$USER /var/run/docker.sock
-```
-
-## Running Tests
-
-### Quick Test (Recommended)
-```bash
-# Start test environment
+# Setup test environment
 ./scripts/start-test-env.sh
 
-# Run basic integration tests
-./scripts/integration-test.sh
+# Run core tests (recommended for daily use)
+./scripts/integration-test.sh        # Core functionality (~30s)
+./scripts/test-rollover.sh          # Rollover features (~45s)
+./scripts/test-conditions.sh        # Conditions validation (~30s)
 
-# Run comprehensive rollover tests (dry-run, safe)
-./scripts/test-rollover.sh
-```
+# Run performance tests (for regression testing)
+./scripts/test-performance.sh       # Performance benchmarks (~1m)
 
-### Comprehensive Testing
-```bash
-# Start test environment
-./scripts/start-test-env.sh
+# Run real operations (use with caution - creates actual data)
+./scripts/test-rollover-real.sh     # Real rollover operations (~2m)
 
-# Run all test suites
-./scripts/integration-test.sh
-./scripts/test-rollover.sh
-./scripts/test-conditions.sh
-./scripts/test-performance.sh
-
-# Optional: Test with real data (creates/deletes test data)
-./scripts/test-rollover-real.sh
-```
-
-### Clean Up
-```bash
-# Stop test environment
-./scripts/stop-test-env.sh
-
-# Remove test containers and networks
-docker-compose down --volumes --remove-orphans
-
-# Clean up any test data files
-rm -rf /tmp/searchctl-*
-
-# Optional: Remove container images to free space
-docker rmi docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-docker rmi opensearchproject/opensearch:2.11.0
-docker rmi opensearchproject/opensearch-dashboards:2.11.0
-```
-
-### Advanced Configuration
-
-#### CI/CD Integration
-```bash
-# Environment variables for automated testing
-export SEARCHCTL_CONFIG="examples/test-config.yaml"
-export SEARCHCTL_CONTEXT="elasticsearch"  # Force single context
-export TEST_TIMEOUT="60s"  # Increase timeout for slow CI
-
-# Run in headless mode
-./scripts/start-test-env.sh --detach
-./scripts/integration-test.sh
-./scripts/test-rollover.sh
+# Cleanup
 ./scripts/stop-test-env.sh
 ```
 
-#### Performance Testing Configuration
+### Quick Validation
 ```bash
-# For performance testing, allocate more resources
-# Edit docker-compose.yml:
-# elasticsearch:
-#   environment:
-#     - "ES_JAVA_OPTS=-Xms1g -Xmx1g"
-# opensearch:
-#   environment:
-#     - "OPENSEARCH_JAVA_OPTS=-Xms1g -Xmx1g"
-
-# Run performance tests
-./scripts/test-performance.sh
+# Just verify everything is working
+./scripts/check-status.sh           # Check container health (~5s)
+./scripts/test-config.sh           # Verify configuration (~10s)
 ```
 
-#### Multiple Engine Testing
+### CI/CD Usage
 ```bash
-# Test against different engine versions
-# Create custom docker-compose.override.yml:
-services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
-  opensearch:
-    image: opensearchproject/opensearch:2.12.0
-
-# Start with override
-docker-compose -f docker-compose.yml -f docker-compose.override.yml up -d
+# Automated testing pipeline
+make test-integration               # Safe tests only
+make test-all                      # Full test suite
 ```
 
-## Test Configuration
+## Scripts Overview
 
-### Configuration Files
+| Script | Purpose | Safety | Duration | Usage |
+|--------|---------|---------|----------|-------|
+| `integration-test.sh` | Core functionality validation | ✅ Safe (dry-run) | ~30s | Daily CI |
+| `test-rollover.sh` | Rollover feature testing | ✅ Safe (dry-run) | ~45s | Feature validation |
+| `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | ~2m | Pre-release testing |
+| `test-performance.sh` | Performance benchmarking | ✅ Safe (dry-run) | ~1m | Performance regression |
+| `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | ~30s | Config testing |
+| `test-config.sh` | Configuration testing | ✅ Safe (read-only) | ~10s | Config validation |
+| `start-test-env.sh` | Environment setup | ✅ Safe | ~30s | Setup |
+| `stop-test-env.sh` | Environment cleanup | ✅ Safe | ~10s | Cleanup |
+| `check-status.sh` | Health verification | ✅ Safe | ~5s | Debugging |
 
-#### `examples/test-config.yaml`
-Primary configuration file used by all test scripts:
+## Architecture
 
-```yaml
-apiVersion: v1
-kind: Config
-current-context: elasticsearch
-contexts:
-- name: elasticsearch
-  context:
-    cluster: elasticsearch-local
-    user: default
-- name: opensearch
-  context:
-    cluster: opensearch-local
-    user: default
-clusters:
-- name: elasticsearch-local
-  cluster:
-    server: http://localhost:9200
-    insecure-skip-tls-verify: true
-- name: opensearch-local
-  cluster:
-    server: http://localhost:9201
-    insecure-skip-tls-verify: true
-users:
-- name: default
-  user: {}
+### Common Utilities (`common.sh`)
+- **Consistent Logging**: Color-coded output with `[INFO]`, `[SUCCESS]`, `[ERROR]` prefixes
+- **Environment Management**: Automated setup, health checks, cleanup
+- **Test Execution**: Standardized command execution with timing
+- **Performance Testing**: Benchmarking utilities for load testing
+- **Extensibility**: Reusable functions for future test development
+
+### Test Categories
+
+#### Core Features
+- **Cluster Operations**: health, info, connectivity
+- **Resource Management**: indices, nodes, data streams
+- **CRUD Operations**: create, get, delete resources
+
+#### Rollover Features  
+- **Conditions**: age, docs, size, primary shard limits
+- **Output Formats**: table, json, yaml
+- **Advanced Options**: lazy rollover, conditions files
+- **Error Handling**: missing args, invalid formats
+
+#### Data Stream Features
+- **Lifecycle**: create, list, delete data streams
+- **Integration**: with rollover operations
+- **Patterns**: wildcard matching, filtering
+
+### Test Output Format
+
+All scripts use consistent emoji-free logging:
+
+```bash
+[INFO] Checking test environment...
+[SUCCESS] Elasticsearch is ready
+[SUCCESS] OpenSearch is ready
+[TEST] Testing elasticsearch...
+[EXEC] Running: ./bin/searchctl --context elasticsearch cluster health
+[EXEC] Command succeeded
+[SUCCESS] Integration tests completed successfully!
 ```
 
-#### `examples/rollover-conditions.json`
-Sample rollover conditions file used in testing:
+**Log Levels:**
+- `[INFO]` - General information and progress updates
+- `[SUCCESS]` - Successful operations and completions
+- `[ERROR]` - Failures and error conditions  
+- `[TEST]` - Test operation descriptions
+- `[EXEC]` - Command execution details
+- `[BUILD]` - Build and compilation messages
+- `[TIMING]` - Performance timing information
 
-```json
-{
-  "max_age": "30d",
-  "max_docs": 1000000,
-  "max_size": "50gb",
-  "max_primary_shard_size": "50gb",
-  "max_primary_shard_docs": 500000
-}
-```
-
-#### `docker-compose.yml`
-Test environment definition with Elasticsearch and OpenSearch containers:
-
-```yaml
-services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
-    ports: ["9200:9200", "9300:9300"]
-    environment:
-      - discovery.type=single-node
-      - xpack.security.enabled=false
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-  
-  opensearch:
-    image: opensearchproject/opensearch:2.11.0
-    ports: ["9201:9200", "9301:9300"]
-    environment:
-      - discovery.type=single-node
-      - "DISABLE_SECURITY_PLUGIN=true"
-```
+## Configuration
 
 ### Environment Variables
-
-The test scripts use these environment variables:
-
-- `SEARCHCTL_CONFIG`: Path to config file (default: `examples/test-config.yaml`)
-- `SEARCHCTL_CONTEXT`: Override current context for single-context testing
-- `TEST_TIMEOUT`: Maximum time to wait for operations (default: 30s)
-
-### Test Environment Setup
-
-#### 1. Container Configuration
 ```bash
-# Start test environment (Elasticsearch + OpenSearch)
-./scripts/start-test-env.sh
-
-# Check services are healthy
-./scripts/check-status.sh
-
-# View container logs if needed
-docker logs searchctl-elasticsearch
-docker logs searchctl-opensearch
+export SEARCHCTL_CONFIG="examples/test-config.yaml"  # Config file path
+export SEARCHCTL_CONTEXT="elasticsearch"            # Force context
+export TEST_TIMEOUT="60s"                          # Test timeout
 ```
 
-#### 2. Port Configuration
-- **Elasticsearch**: `localhost:9200` (HTTP), `localhost:9300` (Transport)
-- **OpenSearch**: `localhost:9201` (HTTP), `localhost:9301` (Transport)
-- **OpenSearch Dashboards**: `localhost:5601` (Web UI)
+### Test Environment
+- **Elasticsearch**: `localhost:9200`
+- **OpenSearch**: `localhost:9201` 
+- **Security**: Disabled for testing
+- **Resources**: 512MB RAM per service
 
-#### 3. Security Configuration
-Both services run with security disabled for testing:
-- No authentication required
-- TLS verification disabled
-- Demo configurations disabled
+## Adding New Tests
 
-### Custom Configuration
+### 1. Create Test Script
+Use the common utilities for consistent functionality:
 
-#### Creating Custom Test Config
 ```bash
-# Copy and modify the test config
-cp examples/test-config.yaml my-test-config.yaml
+#!/bin/bash
+set -e
 
-# Export to use custom config
-export SEARCHCTL_CONFIG="my-test-config.yaml"
+# Source common utilities
+source "$(dirname "$0")/common.sh"
 
-# Run tests with custom config
-./scripts/integration-test.sh
+# Setup environment  
+setup_test_environment
+check_environment
+
+# Your tests here
+test_new_feature() {
+    log_info "Testing new feature..."
+    test_command "./bin/searchctl new-command --dry-run"
+    log_success "New feature test completed"
+}
+
+# Run tests
+test_new_feature
 ```
 
-#### Adding New Contexts
+### 2. Available Utilities
+
+#### Core Functions
+- `setup_test_environment()` - Build searchctl and configure test environment
+- `check_environment()` - Verify Elasticsearch and OpenSearch are running
+- `cleanup_test_data()` - Clean up temporary files and test data
+
+#### Logging Functions  
+- `log_info()` - Blue `[INFO]` messages for general information
+- `log_success()` - Green `[SUCCESS]` messages for completed operations
+- `log_error()` - Red `[ERROR]` messages for failures
+- `log_test()` - Yellow `[TEST]` messages for test operations
+
+#### Test Execution
+- `test_command()` - Execute commands with error handling and logging
+- `time_command()` - Execute commands with performance timing
+- `benchmark_command()` - Run performance benchmarks with iterations
+- `test_both_engines()` - Test functionality against both ES and OpenSearch
+
+#### Validation Utilities
+- `validate_json()` - Verify JSON output is well-formed
+- `validate_yaml()` - Verify YAML output is well-formed
+- `wait_for_service()` - Wait for services to become available
+
+### 3. Update Integration Script
+Add new test calls to `integration-test.sh`:
+```bash
+log_info "Testing new feature..."
+./scripts/test-new-feature.sh
+```
+
+### 4. Document in Scripts Table
+Add entry to the scripts overview table above.
+
+## Best Practices
+
+### Script Development
+- **Use Common Utilities**: Source `common.sh` for consistent behavior
+- **Follow Naming**: Use `test-*.sh` pattern for test scripts
+- **Error Handling**: Use `set -e` and proper exit codes
+- **Logging**: Use `log_*()` functions for consistent output
+- **Safety**: Default to dry-run mode, require explicit flags for real operations
+
+### Performance Considerations
+- **Timing**: Use `time_command()` for performance testing
+- **Benchmarking**: Use `benchmark_command()` for repeated operations
+- **Cleanup**: Always clean up test data and temporary files
+- **Resource Limits**: Be mindful of memory and disk usage in tests
+
+## CI/CD Integration
+
+### GitHub Actions
 ```yaml
-# Add to your config file
-contexts:
-- name: my-cluster
-  context:
-    cluster: my-elasticsearch
-    user: my-user
-clusters:
-- name: my-elasticsearch
-  cluster:
-    server: https://my-cluster.example.com:9200
-    insecure-skip-tls-verify: false
-users:
-- name: my-user
-  user:
-    username: elastic
-    password: changeme
+- name: Run Tests
+  run: |
+    ./scripts/start-test-env.sh
+    ./scripts/integration-test.sh
+    ./scripts/test-rollover.sh
 ```
 
-#### Authentication Setup
-```yaml
-# Basic Auth
-users:
-- name: basic-user
-  user:
-    username: elastic
-    password: changeme
+### Local Development
+```bash
+# Watch mode (requires entr)
+find . -name "*.go" | entr -c make test
 
-# API Key Auth
-users:
-- name: api-user
-  user:
-    api-key: "base64-encoded-api-key"
-
-# Certificate Auth
-clusters:
-- name: secure-cluster
-  cluster:
-    server: https://secure.example.com:9200
-    certificate-authority: /path/to/ca.crt
-    insecure-skip-tls-verify: false
+# Full test suite
+make test-all
 ```
 
-## Expected Results
+### Makefile Targets
+```bash
+make test-integration    # Run integration tests
+make test-rollover      # Run rollover tests  
+make test-performance   # Run performance tests
+make test-all          # Run all test suites
+```
 
-### Successful Test Run
-- All commands execute without errors
-- Dry-run operations show expected output
-- Help commands display correct information
-- Performance tests complete within reasonable time
+## Troubleshooting
 
 ### Common Issues
-- **Connection Refused**: Test environment not started
-- **Permission Denied**: Script not executable (`chmod +x scripts/*.sh`)
-- **Template Errors**: Index templates not created (run `test-rollover-real.sh`)
+- **Port conflicts**: Check `netstat -tulpn | grep :920[01]`
+- **Container issues**: Run `./scripts/check-status.sh`
+- **Config errors**: Verify `examples/test-config.yaml` exists
+- **Permission errors**: Run `chmod +x scripts/*.sh`
+- **Build failures**: Run `make clean && make build`
 
-## Continuous Integration
+### Debug Commands
+```bash
+# Container logs
+podman logs searchctl-elasticsearch
+podman logs searchctl-opensearch
 
-These scripts are designed to be CI-friendly:
-- Return appropriate exit codes
-- Provide clear success/failure indication
-- Support automated execution
-- Include timing and performance metrics
+# Service health
+curl localhost:9200/_cluster/health
+curl localhost:9201/_cluster/health
 
-## Contributing
+# Config validation
+./bin/searchctl config view
 
-When adding new rollover or datastream features:
-1. Add tests to the appropriate script
-2. Update this README
-3. Ensure all test modes are covered (dry-run, real operations, error cases)
-4. Test with both Elasticsearch and OpenSearch
+# Test specific functionality
+./bin/searchctl --context elasticsearch --verbose cluster health
+./bin/searchctl --context opensearch get indices --dry-run
+```
+
+### Performance Troubleshooting
+```bash
+# Check resource usage
+podman stats
+
+# Monitor test execution time
+time ./scripts/integration-test.sh
+
+# Run individual benchmarks
+./scripts/test-performance.sh | grep "Results:"
+```
