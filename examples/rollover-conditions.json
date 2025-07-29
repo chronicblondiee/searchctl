@@ -1,0 +1,7 @@
+{
+  "max_age": "30d",
+  "max_docs": 1000000,
+  "max_size": "50gb",
+  "max_primary_shard_size": "50gb",
+  "max_primary_shard_docs": 500000
+}

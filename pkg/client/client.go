@@ -21,6 +21,8 @@ type SearchClient interface {
 	DeleteIndex(name string) error
 	GetNodes() ([]Node, error)
 	GetNode(nodeID string) (*Node, error)
+	GetDataStreams(pattern string) ([]DataStream, error)
+	RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*RolloverResponse, error)
 }
 
 type Client struct {
@@ -79,6 +81,29 @@ type Node struct {
 	Master      string `json:"master"`
 }
 
+type DataStream struct {
+	Name               string   `json:"name"`
+	Timestamp          string   `json:"timestamp_field"`
+	Indices            []string `json:"indices"`
+	Generation         int      `json:"generation"`
+	Status             string   `json:"status"`
+	Template           string   `json:"template,omitempty"`
+	IlmPolicy          string   `json:"ilm_policy,omitempty"`
+	Hidden             bool     `json:"hidden,omitempty"`
+	System             bool     `json:"system,omitempty"`
+	AllowCustomRouting bool     `json:"allow_custom_routing,omitempty"`
+}
+
+type RolloverResponse struct {
+	Acknowledged       bool            `json:"acknowledged"`
+	ShardsAcknowledged bool            `json:"shards_acknowledged"`
+	OldIndex           string          `json:"old_index"`
+	NewIndex           string          `json:"new_index"`
+	RolledOver         bool            `json:"rolled_over"`
+	DryRun             bool            `json:"dry_run"`
+	Conditions         map[string]bool `json:"conditions"`
+}
+
 func NewClient() (SearchClient, error) {
 	ctx, err := config.GetCurrentContext()
 	if err != nil {
@@ -96,7 +121,7 @@ func NewClient() (SearchClient, error) {
 	}
 
 	httpClient := &http.Client{}
-	
+
 	if cluster.Cluster.InsecureSkipTLSVerify {
 		httpClient.Transport = &http.Transport{
 			TLSClientConfig: &tls.Config{
@@ -118,25 +143,25 @@ func NewClient() (SearchClient, error) {
 
 func (c *Client) makeRequest(method, path string, body []byte) (*http.Response, error) {
 	url := c.baseURL + path
-	
+
 	var reqBody io.Reader
 	if body != nil {
 		reqBody = bytes.NewBuffer(body)
 	}
-	
+
 	req, err := http.NewRequest(method, url, reqBody)
 	if err != nil {
 		return nil, err
 	}
-	
+
 	req.Header.Set("Content-Type", "application/json")
-	
+
 	if c.apiKey != "" {
 		req.Header.Set("Authorization", "ApiKey "+c.apiKey)
 	} else if c.username != "" && c.password != "" {
 		req.SetBasicAuth(c.username, c.password)
 	}
-	
+
 	return c.httpClient.Do(req)
 }
 
@@ -185,7 +210,7 @@ func (c *Client) GetIndices(pattern string) ([]Index, error) {
 	if pattern != "" {
 		indexPattern = pattern
 	}
-	
+
 	path := fmt.Sprintf("/_cat/indices/%s?format=json&h=index,health,status,uuid,pri,rep,docs.count,docs.deleted,store.size,pri.store.size", indexPattern)
 	resp, err := c.makeRequest("GET", path, nil)
 	if err != nil {
@@ -295,4 +320,69 @@ func (c *Client) GetNode(nodeID string) (*Node, error) {
 	}
 
 	return nil, fmt.Errorf("node %q not found", nodeID)
+}
+
+func (c *Client) GetDataStreams(pattern string) ([]DataStream, error) {
+	dataStreamPattern := "*"
+	if pattern != "" {
+		dataStreamPattern = pattern
+	}
+
+	path := fmt.Sprintf("/_data_stream/%s", dataStreamPattern)
+	resp, err := c.makeRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting data streams: %s", string(body))
+	}
+
+	var response struct {
+		DataStreams []DataStream `json:"data_streams"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	return response.DataStreams, nil
+}
+
+func (c *Client) RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*RolloverResponse, error) {
+	var bodyBytes []byte
+	if conditions != nil || lazy {
+		requestBody := map[string]interface{}{}
+		if conditions != nil {
+			requestBody["conditions"] = conditions
+		}
+		var err error
+		bodyBytes, err = json.Marshal(requestBody)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	path := fmt.Sprintf("/%s/_rollover", name)
+	if lazy {
+		path += "?lazy=true"
+	}
+	resp, err := c.makeRequest("POST", path, bodyBytes)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error rolling over data stream: %s", string(body))
+	}
+
+	var rolloverResp RolloverResponse
+	if err := json.NewDecoder(resp.Body).Decode(&rolloverResp); err != nil {
+		return nil, err
+	}
+
+	return &rolloverResp, nil
 }

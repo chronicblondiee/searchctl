@@ -86,3 +86,56 @@ func TestNodeStruct(t *testing.T) {
 		t.Errorf("Expected IP '127.0.0.1', got '%s'", node.IP)
 	}
 }
+
+func TestDataStreamStruct(t *testing.T) {
+	dataStream := client.DataStream{
+		Name:               "logs-nginx",
+		Timestamp:          "@timestamp",
+		Indices:            []string{"logs-nginx-000001", "logs-nginx-000002"},
+		Generation:         2,
+		Status:             "green",
+		Template:           "logs-nginx-template",
+		IlmPolicy:          "logs-policy",
+		Hidden:             false,
+		System:             false,
+		AllowCustomRouting: false,
+	}
+
+	if dataStream.Name != "logs-nginx" {
+		t.Errorf("Expected name 'logs-nginx', got '%s'", dataStream.Name)
+	}
+	if dataStream.Generation != 2 {
+		t.Errorf("Expected generation 2, got %d", dataStream.Generation)
+	}
+	if len(dataStream.Indices) != 2 {
+		t.Errorf("Expected 2 indices, got %d", len(dataStream.Indices))
+	}
+}
+
+func TestRolloverResponseStruct(t *testing.T) {
+	response := client.RolloverResponse{
+		Acknowledged:       true,
+		ShardsAcknowledged: true,
+		OldIndex:           "logs-nginx-000001",
+		NewIndex:           "logs-nginx-000002",
+		RolledOver:         true,
+		DryRun:             false,
+		Conditions: map[string]bool{
+			"max_age":  true,
+			"max_docs": false,
+		},
+	}
+
+	if !response.Acknowledged {
+		t.Error("Expected Acknowledged to be true")
+	}
+	if !response.RolledOver {
+		t.Error("Expected RolledOver to be true")
+	}
+	if response.OldIndex != "logs-nginx-000001" {
+		t.Errorf("Expected old index 'logs-nginx-000001', got '%s'", response.OldIndex)
+	}
+	if len(response.Conditions) != 2 {
+		t.Errorf("Expected 2 conditions, got %d", len(response.Conditions))
+	}
+}
