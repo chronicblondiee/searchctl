@@ -89,9 +89,9 @@ func TestNodeStruct(t *testing.T) {
 
 func TestDataStreamStruct(t *testing.T) {
 	dataStream := client.DataStream{
-		Name:               "logs-nginx",
-		TimestampField:     client.TimestampFieldType{Name: "@timestamp"},
-		Indices:            []client.DataStreamIndex{
+		Name:           "logs-nginx",
+		TimestampField: client.TimestampFieldType{Name: "@timestamp"},
+		Indices: []client.DataStreamIndex{
 			{IndexName: "logs-nginx-000001", IndexUUID: "uuid1"},
 			{IndexName: "logs-nginx-000002", IndexUUID: "uuid2"},
 		},
