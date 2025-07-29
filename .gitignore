@@ -8,6 +8,10 @@
 *.so
 *.dylib
 
+# Built binaries
+searchctl
+searchctl.exe
+
 # Build output
 bin/
 dist/
