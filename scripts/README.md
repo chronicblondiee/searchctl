@@ -165,6 +165,11 @@ test_new_feature
 - `validate_yaml()` - Verify YAML output is well-formed
 - `wait_for_service()` - Wait for services to become available
 
+#### Template Management
+- `create_test_index_template()` - Create index templates via direct API calls
+- `delete_test_index_template()` - Delete index templates via direct API calls  
+- `apply_test_index_template()` - Apply index templates from YAML files using searchctl apply
+
 ### 3. Update Integration Script
 Add new test calls to `integration-test.sh`:
 ```bash

@@ -25,6 +25,10 @@ type SearchClient interface {
 	CreateDataStream(name string) error
 	DeleteDataStream(name string) error
 	RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*RolloverResponse, error)
+	GetIndexTemplates(pattern string) ([]IndexTemplate, error)
+	GetIndexTemplate(name string) (*IndexTemplate, error)
+	CreateIndexTemplate(name string, body map[string]interface{}) error
+	DeleteIndexTemplate(name string) error
 }
 
 type Client struct {
@@ -115,6 +119,23 @@ type RolloverResponse struct {
 	RolledOver         bool            `json:"rolled_over"`
 	DryRun             bool            `json:"dry_run"`
 	Conditions         map[string]bool `json:"conditions"`
+}
+
+type IndexTemplate struct {
+	Name         string                 `json:"name"`
+	IndexPattern []string               `json:"index_patterns"`
+	Template     TemplateDefinition     `json:"template,omitempty"`
+	ComposedOf   []string               `json:"composed_of,omitempty"`
+	Priority     int                    `json:"priority,omitempty"`
+	Version      int                    `json:"version,omitempty"`
+	Meta         map[string]interface{} `json:"_meta,omitempty"`
+	DataStream   map[string]interface{} `json:"data_stream,omitempty"`
+}
+
+type TemplateDefinition struct {
+	Settings map[string]interface{} `json:"settings,omitempty"`
+	Mappings map[string]interface{} `json:"mappings,omitempty"`
+	Aliases  map[string]interface{} `json:"aliases,omitempty"`
 }
 
 func NewClient() (SearchClient, error) {
@@ -430,4 +451,110 @@ func (c *Client) RolloverDataStream(name string, conditions map[string]interface
 	}
 
 	return &rolloverResp, nil
+}
+
+func (c *Client) GetIndexTemplates(pattern string) ([]IndexTemplate, error) {
+	templatePattern := "*"
+	if pattern != "" {
+		templatePattern = pattern
+	}
+
+	path := fmt.Sprintf("/_index_template/%s", templatePattern)
+	resp, err := c.makeRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting index templates: %s", string(body))
+	}
+
+	var response struct {
+		IndexTemplates []struct {
+			Name          string        `json:"name"`
+			IndexTemplate IndexTemplate `json:"index_template"`
+		} `json:"index_templates"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	var templates []IndexTemplate
+	for _, template := range response.IndexTemplates {
+		template.IndexTemplate.Name = template.Name
+		templates = append(templates, template.IndexTemplate)
+	}
+
+	return templates, nil
+}
+
+func (c *Client) GetIndexTemplate(name string) (*IndexTemplate, error) {
+	path := fmt.Sprintf("/_index_template/%s", name)
+	resp, err := c.makeRequest("GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("error getting index template: %s", string(body))
+	}
+
+	var response struct {
+		IndexTemplates []struct {
+			Name          string        `json:"name"`
+			IndexTemplate IndexTemplate `json:"index_template"`
+		} `json:"index_templates"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		return nil, err
+	}
+
+	if len(response.IndexTemplates) == 0 {
+		return nil, fmt.Errorf("index template %q not found", name)
+	}
+
+	template := response.IndexTemplates[0].IndexTemplate
+	template.Name = response.IndexTemplates[0].Name
+	return &template, nil
+}
+
+func (c *Client) CreateIndexTemplate(name string, body map[string]interface{}) error {
+	bodyBytes, err := json.Marshal(body)
+	if err != nil {
+		return err
+	}
+
+	path := fmt.Sprintf("/_index_template/%s", name)
+	resp, err := c.makeRequest("PUT", path, bodyBytes)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error creating index template: %s", string(body))
+	}
+
+	return nil
+}
+
+func (c *Client) DeleteIndexTemplate(name string) error {
+	path := fmt.Sprintf("/_index_template/%s", name)
+	resp, err := c.makeRequest("DELETE", path, nil)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		body, _ := io.ReadAll(resp.Body)
+		return fmt.Errorf("error deleting index template: %s", string(body))
+	}
+
+	return nil
 }

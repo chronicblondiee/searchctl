@@ -14,6 +14,7 @@ func NewGetCmd() *cobra.Command {
 	cmd.AddCommand(NewGetIndicesCmd())
 	cmd.AddCommand(NewGetNodesCmd())
 	cmd.AddCommand(NewGetDataStreamsCmd())
+	cmd.AddCommand(NewGetIndexTemplatesCmd())
 
 	return cmd
 }
