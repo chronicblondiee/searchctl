@@ -238,9 +238,60 @@ setup_cleanup_trap() {
     trap cleanup_test_data EXIT
 }
 
+# Create a standard index template for testing
+create_test_index_template() {
+    local context="$1"
+    local template_name="$2"
+    local index_pattern="$3"
+    local port
+    
+    if [[ "$context" == "elasticsearch" ]]; then
+        port=9200
+    else
+        port=9201
+    fi
+    
+    log_info "Creating index template '$template_name' for $context..."
+    
+    curl -s -X PUT "localhost:$port/_index_template/$template_name" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "index_patterns": ["'$index_pattern'"],
+            "data_stream": {},
+            "template": {
+                "settings": {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0
+                },
+                "mappings": {
+                    "properties": {
+                        "@timestamp": {"type": "date"},
+                        "message": {"type": "text"}
+                    }
+                }
+            }
+        }' >/dev/null 2>&1 || true
+}
+
+# Delete a test index template
+delete_test_index_template() {
+    local context="$1"
+    local template_name="$2"
+    local port
+    
+    if [[ "$context" == "elasticsearch" ]]; then
+        port=9200
+    else
+        port=9201
+    fi
+    
+    curl -s -X DELETE "localhost:$port/_index_template/$template_name" >/dev/null 2>&1 || true
+}
+
 # Export functions for use in other scripts
 export -f log_info log_success log_error log_test
 export -f setup_test_environment time_command test_command
 export -f wait_for_service cleanup_test_data check_environment
 export -f test_both_engines benchmark_command
 export -f validate_json validate_yaml print_usage setup_cleanup_trap
+export -f create_test_index_template delete_test_index_template

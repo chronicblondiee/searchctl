@@ -10,7 +10,6 @@ Automated testing for searchctl functionality with emoji-free logging and shared
 
 # Run core tests (recommended for daily use)
 ./scripts/integration-test.sh        # Core functionality (~30s)
-./scripts/test-rollover.sh          # Rollover features (~45s)
 ./scripts/test-conditions.sh        # Conditions validation (~30s)
 
 # Run performance tests (for regression testing)
@@ -42,7 +41,6 @@ make test-all                      # Full test suite
 | Script | Purpose | Safety | Duration | Usage |
 |--------|---------|---------|----------|-------|
 | `integration-test.sh` | Core functionality validation | ✅ Safe (dry-run) | ~30s | Daily CI |
-| `test-rollover.sh` | Rollover feature testing | ✅ Safe (dry-run) | ~45s | Feature validation |
 | `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | ~2m | Pre-release testing |
 | `test-performance.sh` | Performance benchmarking | ✅ Safe (dry-run) | ~1m | Performance regression |
 | `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | ~30s | Config testing |
@@ -200,7 +198,6 @@ Add entry to the scripts overview table above.
   run: |
     ./scripts/start-test-env.sh
     ./scripts/integration-test.sh
-    ./scripts/test-rollover.sh
 ```
 
 ### Local Development
@@ -215,7 +212,6 @@ make test-all
 ### Makefile Targets
 ```bash
 make test-integration    # Run integration tests
-make test-rollover      # Run rollover tests  
 make test-performance   # Run performance tests
 make test-all          # Run all test suites
 ```

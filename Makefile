@@ -1,4 +1,4 @@
-.PHONY: build test test-unit test-integration test-all test-rollover test-performance start-test-env stop-test-env install clean release dev-deps
+.PHONY: build test test-unit test-integration test-all test-performance test-conditions test-config start-test-env stop-test-env install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
@@ -21,15 +21,19 @@ test-integration:
 	@echo "Running integration tests..."
 	./scripts/integration-test.sh
 
-test-rollover:
-	@echo "Running rollover tests..."
-	./scripts/test-rollover.sh
-
 test-performance:
 	@echo "Running performance tests..."
 	./scripts/test-performance.sh
 
-test-all: test-unit test-integration test-rollover test-performance
+test-conditions:
+	@echo "Running conditions tests..."
+	./scripts/test-conditions.sh
+
+test-config:
+	@echo "Running config tests..."
+	./scripts/test-config.sh
+
+test-all: test-unit test-integration test-performance test-conditions test-config
 	@echo "All tests completed!"
 
 start-test-env:

@@ -13,26 +13,91 @@ setup_test_environment
 for context in elasticsearch opensearch; do
     log_test "Testing $context..."
     
+    # Set correct port for context
+    port=9200
+    if [ "$context" = "opensearch" ]; then
+        port=9201
+    fi
+    
+    # Cleanup any leftover test resources first
+    ./bin/searchctl --context $context delete datastream test-logs >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream logs-test >/dev/null 2>&1 || true
+    curl -s -X DELETE "localhost:$port/_index_template/test-logs-template" >/dev/null 2>&1 || true
+    curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
+    
     # Basic cluster operations
     test_command "./bin/searchctl --context $context cluster health" true
     test_command "./bin/searchctl --context $context cluster info" true
     test_command "./bin/searchctl --context $context get indices" true
     
-    # Test datastream operations (dry-run)
+    # Test datastream operations (requires index template)
     log_test "Testing datastream operations..."
     test_command "./bin/searchctl --context $context get datastreams" true
-    test_command "./bin/searchctl --context $context create datastream test-logs --dry-run" true
-    test_command "./bin/searchctl --context $context delete datastream test-logs --dry-run" true
     
-    # Test rollover operations (dry-run)
+    # Create index template first (required for data streams)
+    curl -s -X PUT "localhost:$port/_index_template/test-logs-template" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "index_patterns": ["test-logs*"],
+            "data_stream": {},
+            "template": {
+                "settings": {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0
+                }
+            }
+        }' >/dev/null 2>&1 || true
+    
+    # Test datastream creation with proper template
+    test_command "./bin/searchctl --context $context create datastream test-logs" true
+    test_command "./bin/searchctl --context $context get datastreams test-logs" true
+    test_command "./bin/searchctl --context $context delete datastream test-logs" true
+    
+    # Clean up template
+    curl -s -X DELETE "localhost:$port/_index_template/test-logs-template" >/dev/null 2>&1 || true
+    
+    # Test rollover operations (requires datastream with template)
     log_test "Testing rollover operations..."
-    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-age 7d --max-docs 1000" true
-    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-primary-shard-docs 500000" true
-    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --lazy --max-age 1d" true
-    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-age 30d --max-docs 1000000 --max-primary-shard-docs 500000 --max-primary-shard-size 50gb --max-size 50gb" true
+    
+    # Cleanup any existing test datastream first
+    ./bin/searchctl --context $context delete datastream logs-test >/dev/null 2>&1 || true
+    curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
+    
+    # Create index template for rollover testing
+    curl -s -X PUT "localhost:$port/_index_template/logs-test-template" \
+        -H "Content-Type: application/json" \
+        -d '{
+            "index_patterns": ["logs-test*"],
+            "data_stream": {},
+            "template": {
+                "settings": {
+                    "number_of_shards": 1,
+                    "number_of_replicas": 0
+                }
+            }
+        }' >/dev/null 2>&1 || true
+    
+    # Create test datastream for rollover testing
+    test_command "./bin/searchctl --context $context create datastream logs-test" true
+    test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 7d --max-docs 1000" true
+    
+    # Test different conditions based on engine capabilities
+    if [ "$context" = "elasticsearch" ]; then
+        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-primary-shard-docs 500000" true
+        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 30d --max-docs 1000000 --max-primary-shard-docs 500000 --max-primary-shard-size 50gb --max-size 50gb" true
+        test_command "./bin/searchctl --context $context rollover datastream logs-test --lazy" true
+    else
+        # OpenSearch doesn't support some ES-specific conditions
+        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-docs 500000" true
+        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 30d --max-docs 1000000 --max-size 50gb" true
+    fi
     
     # Test output formats
-    test_command "./bin/searchctl --context $context rollover ds logs-test --dry-run --max-age 7d" true
+    test_command "./bin/searchctl --context $context rollover ds logs-test --max-age 7d" true
+    
+    # Cleanup test datastream and template
+    test_command "./bin/searchctl --context $context delete datastream logs-test" true
+    curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
     log_success "$context tests completed"
 done
@@ -46,6 +111,5 @@ log_test "Testing help documentation..."
 
 log_success "Integration tests completed successfully!"
 log_info "Additional test scripts available:"
-log_info "  ./scripts/test-rollover.sh - Comprehensive rollover testing"  
 log_info "  ./scripts/test-rollover-real.sh - Real operations with test data"
 log_info "  ./scripts/test-performance.sh - Performance benchmarking"

@@ -103,7 +103,7 @@ Use: `searchctl config use-context development`
 ```bash
 # Quick test environment setup
 ./scripts/start-test-env.sh
-./scripts/integration-test.sh && ./scripts/test-rollover.sh
+./scripts/integration-test.sh
 ./scripts/stop-test-env.sh
 
 # Build and test
