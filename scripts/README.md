@@ -1,6 +1,6 @@
 # Test Scripts
 
-Automated testing for searchctl functionality with consistent logging and shared utilities.
+Automated testing for searchctl functionality with emoji-free logging and shared utilities for better CI/CD compatibility.
 
 ## Quick Start
 
@@ -8,14 +8,33 @@ Automated testing for searchctl functionality with consistent logging and shared
 # Setup test environment
 ./scripts/start-test-env.sh
 
-# Run tests
-./scripts/integration-test.sh        # Basic functionality
-./scripts/test-rollover.sh          # Rollover features (dry-run)
-./scripts/test-rollover-real.sh     # Real operations (creates data)
-./scripts/test-performance.sh       # Performance benchmarks
+# Run core tests (recommended for daily use)
+./scripts/integration-test.sh        # Core functionality (~30s)
+./scripts/test-rollover.sh          # Rollover features (~45s)
+./scripts/test-conditions.sh        # Conditions validation (~30s)
+
+# Run performance tests (for regression testing)
+./scripts/test-performance.sh       # Performance benchmarks (~1m)
+
+# Run real operations (use with caution - creates actual data)
+./scripts/test-rollover-real.sh     # Real rollover operations (~2m)
 
 # Cleanup
 ./scripts/stop-test-env.sh
+```
+
+### Quick Validation
+```bash
+# Just verify everything is working
+./scripts/check-status.sh           # Check container health (~5s)
+./scripts/test-config.sh           # Verify configuration (~10s)
+```
+
+### CI/CD Usage
+```bash
+# Automated testing pipeline
+make test-integration               # Safe tests only
+make test-all                      # Full test suite
 ```
 
 ## Scripts Overview
@@ -58,6 +77,29 @@ Automated testing for searchctl functionality with consistent logging and shared
 - **Lifecycle**: create, list, delete data streams
 - **Integration**: with rollover operations
 - **Patterns**: wildcard matching, filtering
+
+### Test Output Format
+
+All scripts use consistent emoji-free logging:
+
+```bash
+[INFO] Checking test environment...
+[SUCCESS] Elasticsearch is ready
+[SUCCESS] OpenSearch is ready
+[TEST] Testing elasticsearch...
+[EXEC] Running: ./bin/searchctl --context elasticsearch cluster health
+[EXEC] Command succeeded
+[SUCCESS] Integration tests completed successfully!
+```
+
+**Log Levels:**
+- `[INFO]` - General information and progress updates
+- `[SUCCESS]` - Successful operations and completions
+- `[ERROR]` - Failures and error conditions  
+- `[TEST]` - Test operation descriptions
+- `[EXEC]` - Command execution details
+- `[BUILD]` - Build and compilation messages
+- `[TIMING]` - Performance timing information
 
 ## Configuration
 
@@ -102,15 +144,29 @@ test_new_feature
 ```
 
 ### 2. Available Utilities
-- `log_info()`, `log_success()`, `log_error()` - Consistent logging
-- `setup_test_environment()` - Build and configure
-- `check_environment()` - Verify services are running
-- `test_command()` - Execute with error handling
-- `time_command()` - Performance timing
-- `benchmark_command()` - Load testing
-- `test_both_engines()` - Test ES and OS together
 
-### 3. Update Integration Script
+#### Core Functions
+- `setup_test_environment()` - Build searchctl and configure test environment
+- `check_environment()` - Verify Elasticsearch and OpenSearch are running
+- `cleanup_test_data()` - Clean up temporary files and test data
+
+#### Logging Functions  
+- `log_info()` - Blue `[INFO]` messages for general information
+- `log_success()` - Green `[SUCCESS]` messages for completed operations
+- `log_error()` - Red `[ERROR]` messages for failures
+- `log_test()` - Yellow `[TEST]` messages for test operations
+
+#### Test Execution
+- `test_command()` - Execute commands with error handling and logging
+- `time_command()` - Execute commands with performance timing
+- `benchmark_command()` - Run performance benchmarks with iterations
+- `test_both_engines()` - Test functionality against both ES and OpenSearch
+
+#### Validation Utilities
+- `validate_json()` - Verify JSON output is well-formed
+- `validate_yaml()` - Verify YAML output is well-formed
+- `wait_for_service()` - Wait for services to become available
+
 ### 3. Update Integration Script
 Add new test calls to `integration-test.sh`:
 ```bash
@@ -156,26 +212,12 @@ find . -name "*.go" | entr -c make test
 make test-all
 ```
 
-## Troubleshooting
-
-### Common Issues
-- **Port conflicts**: Check `netstat -tulpn | grep :920[01]`
-- **Container issues**: Run `./scripts/check-status.sh`
-- **Config errors**: Verify `examples/test-config.yaml` exists
-- **Permission errors**: Run `chmod +x scripts/*.sh`
-
-### Debug Commands
+### Makefile Targets
 ```bash
-# Container logs
-podman logs searchctl-elasticsearch
-podman logs searchctl-opensearch
-
-# Service health
-curl localhost:9200/_cluster/health
-curl localhost:9201/_cluster/health
-
-# Config validation
-./bin/searchctl config view
+make test-integration    # Run integration tests
+make test-rollover      # Run rollover tests  
+make test-performance   # Run performance tests
+make test-all          # Run all test suites
 ```
 
 ## Troubleshooting
@@ -185,6 +227,7 @@ curl localhost:9201/_cluster/health
 - **Container issues**: Run `./scripts/check-status.sh`
 - **Config errors**: Verify `examples/test-config.yaml` exists
 - **Permission errors**: Run `chmod +x scripts/*.sh`
+- **Build failures**: Run `make clean && make build`
 
 ### Debug Commands
 ```bash
@@ -198,4 +241,20 @@ curl localhost:9201/_cluster/health
 
 # Config validation
 ./bin/searchctl config view
+
+# Test specific functionality
+./bin/searchctl --context elasticsearch --verbose cluster health
+./bin/searchctl --context opensearch get indices --dry-run
+```
+
+### Performance Troubleshooting
+```bash
+# Check resource usage
+podman stats
+
+# Monitor test execution time
+time ./scripts/integration-test.sh
+
+# Run individual benchmarks
+./scripts/test-performance.sh | grep "Results:"
 ```
