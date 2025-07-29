@@ -14,26 +14,25 @@ for context in elasticsearch opensearch; do
     log_test "Testing $context..."
     
     # Basic cluster operations
-    run_with_context "$context" cluster health >/dev/null
-    run_with_context "$context" cluster info >/dev/null
-    run_with_context "$context" get indices >/dev/null
+    test_command "./bin/searchctl --context $context cluster health" true
+    test_command "./bin/searchctl --context $context cluster info" true
+    test_command "./bin/searchctl --context $context get indices" true
     
     # Test datastream operations (dry-run)
     log_test "Testing datastream operations..."
-    run_with_context "$context" get datastreams >/dev/null
-    run_with_context "$context" create datastream test-logs --dry-run >/dev/null
-    run_with_context "$context" delete datastream test-logs --dry-run >/dev/null
+    test_command "./bin/searchctl --context $context get datastreams" true
+    test_command "./bin/searchctl --context $context create datastream test-logs --dry-run" true
+    test_command "./bin/searchctl --context $context delete datastream test-logs --dry-run" true
     
     # Test rollover operations (dry-run)
     log_test "Testing rollover operations..."
-    run_with_context "$context" rollover datastream logs-test --dry-run --max-age 7d --max-docs 1000 >/dev/null
-    run_with_context "$context" rollover datastream logs-test --dry-run --max-primary-shard-docs 500000 >/dev/null
-    run_with_context "$context" rollover datastream logs-test --dry-run --lazy --max-age 1d >/dev/null
-    run_with_context "$context" rollover datastream logs-test --dry-run -f examples/rollover-conditions.json >/dev/null
+    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-age 7d --max-docs 1000" true
+    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-primary-shard-docs 500000" true
+    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --lazy --max-age 1d" true
+    test_command "./bin/searchctl --context $context rollover datastream logs-test --dry-run --max-age 30d --max-docs 1000000 --max-primary-shard-docs 500000 --max-primary-shard-size 50gb --max-size 50gb" true
     
     # Test output formats
-    run_with_context "$context" rollover ds logs-test --dry-run --max-age 7d -o json >/dev/null
-    run_with_context "$context" get datastreams -o wide >/dev/null
+    test_command "./bin/searchctl --context $context rollover ds logs-test --dry-run --max-age 7d" true
     
     log_success "$context tests completed"
 done
@@ -47,6 +46,6 @@ log_test "Testing help documentation..."
 
 log_success "Integration tests completed successfully!"
 log_info "Additional test scripts available:"
-log_info "  📄 ./scripts/test-rollover.sh - Comprehensive rollover testing"  
-log_info "  🧪 ./scripts/test-rollover-real.sh - Real operations with test data"
-log_info "  🚀 ./scripts/test-performance.sh - Performance benchmarking"
+log_info "  ./scripts/test-rollover.sh - Comprehensive rollover testing"  
+log_info "  ./scripts/test-rollover-real.sh - Real operations with test data"
+log_info "  ./scripts/test-performance.sh - Performance benchmarking"

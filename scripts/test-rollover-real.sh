@@ -1,21 +1,20 @@
 #!/bin/bash
 set -e
 
-echo "🧪 Setting up real test environment for rollover operations..."
+# Source common utilities
+source "$(dirname "$0")/common.sh"
 
-# Set test config
-export SEARCHCTL_CONFIG="examples/test-config.yaml"
+echo "[TEST-REAL] Setting up real test environment for rollover operations..."
 
-# Build searchctl
-echo "🔨 Building searchctl..."
-make build
+# Set up test environment
+setup_test_environment
 
 # Function to create index template for data streams
 create_index_template() {
     local context=$1
     local template_name="test-logs-template"
     
-    echo "📝 Creating index template for $context..."
+    log_info "Creating index template for $context..."
     
     local template_body='{
         "index_patterns": ["test-logs-*"],
@@ -60,7 +59,7 @@ add_test_documents() {
     local context=$1
     local datastream_name=$2
     
-    echo "📄 Adding test documents to $datastream_name on $context..."
+    log_info "Adding test documents to $datastream_name on $context..."
     
     local port
     if [[ "$context" == "elasticsearch" ]]; then
@@ -88,7 +87,7 @@ add_test_documents() {
 # Function to test real rollover operations
 test_real_rollover() {
     local context=$1
-    echo "🔄 Testing real rollover operations for $context..."
+    log_info "Testing real rollover operations for $context..."
     
     local test_datastream="test-logs-rollover-$context"
     
@@ -123,21 +122,19 @@ test_real_rollover() {
     ./bin/searchctl --context $context delete datastream $test_datastream || echo "Cleanup failed"
 }
 
-# Check if test environment is running
-echo "🏥 Checking test environment..."
-if ! curl -f http://localhost:9200/_cluster/health >/dev/null 2>&1; then
-    echo "❌ Elasticsearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
+# Check environment and run tests
+check_environment
+
+# Warning message
+echo ""
+log_error "WARNING: This script will create real data streams and indices!"
+log_info "Make sure you understand the impact before proceeding."
+read -p "Continue? (y/N): " -n 1 -r
+echo
+if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+    echo "Aborted."
     exit 1
 fi
-
-if ! curl -f http://localhost:9201/_cluster/health >/dev/null 2>&1; then
-    echo "❌ OpenSearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
-    exit 1
-fi
-
-echo "✅ Test environment is ready"
 
 # Create index templates first
 create_index_template "elasticsearch"
@@ -148,14 +145,14 @@ sleep 2
 
 # Test with real data
 echo ""
-echo "🧪 Testing Elasticsearch with real rollover operations..."
+log_info "Testing Elasticsearch with real rollover operations..."
 test_real_rollover "elasticsearch"
 
 echo ""
-echo "🧪 Testing OpenSearch with real rollover operations..."
+log_info "Testing OpenSearch with real rollover operations..."
 test_real_rollover "opensearch"
 
 echo ""
-echo "✅ Real rollover testing completed!"
-echo "💡 Note: Some operations may fail if the cluster doesn't support certain features."
-echo "📊 Check the cluster logs if you encounter any issues."
+log_success "Real rollover testing completed!"
+log_info "Note: Some operations may fail if the cluster doesn't support certain features."
+log_info "Check the cluster logs if you encounter any issues."

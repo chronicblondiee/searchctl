@@ -4,7 +4,7 @@ set -e
 # Source common utilities
 source "$(dirname "$0")/common.sh"
 
-echo "🔄 Testing SearchCtl Rollover Functionality..."
+echo "[TEST] Testing SearchCtl Rollover Functionality..."
 
 # Set test config and build
 setup_test_environment

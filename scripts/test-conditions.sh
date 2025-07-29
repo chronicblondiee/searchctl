@@ -1,14 +1,13 @@
 #!/bin/bash
 set -e
 
-echo "🧪 Testing rollover conditions file functionality..."
+# Source common utilities
+source "$(dirname "$0")/common.sh"
 
-# Set test config
-export SEARCHCTL_CONFIG="examples/test-config.yaml"
+echo "[TEST] Testing rollover conditions file functionality..."
 
-# Build searchctl
-echo "🔨 Building searchctl..."
-make build
+# Set up test environment
+setup_test_environment
 
 # Create a temporary directory for test files
 TEST_DIR="/tmp/searchctl-rollover-tests"
@@ -17,7 +16,7 @@ mkdir -p "$TEST_DIR"
 # Function to create and test different condition files
 test_conditions_file() {
     local context=$1
-    echo "📄 Testing conditions files for $context..."
+    log_info "Testing conditions files for $context..."
     
     # Test 1: Basic conditions file
     cat > "$TEST_DIR/basic-conditions.json" << 'EOF'
@@ -86,11 +85,11 @@ EOF
 EOF
     
     echo "Testing invalid JSON file (should fail)..."
-    ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f "$TEST_DIR/invalid-conditions.json" || echo "✅ Correctly failed with invalid JSON"
+    ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f "$TEST_DIR/invalid-conditions.json" || echo "[OK] Correctly failed with invalid JSON"
     
     # Test 7: Non-existent file (should fail)
     echo "Testing non-existent file (should fail)..."
-    ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f "$TEST_DIR/non-existent.json" || echo "✅ Correctly failed with non-existent file"
+    ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f "$TEST_DIR/non-existent.json" || echo "[OK] Correctly failed with non-existent file"
     
     # Test 8: Combination of command line args and file
     echo "Testing combination of command line and file conditions..."
@@ -100,7 +99,7 @@ EOF
 # Function to test output formats with conditions files
 test_output_formats() {
     local context=$1
-    echo "🎨 Testing output formats with conditions files for $context..."
+    log_info "Testing output formats with conditions files for $context..."
     
     echo "JSON output:"
     ./bin/searchctl --context $context rollover datastream test-logs --dry-run -f examples/rollover-conditions.json -o json
@@ -115,61 +114,48 @@ test_output_formats() {
 # Function to test verbose mode with conditions files
 test_verbose_mode() {
     local context=$1
-    echo "🔍 Testing verbose mode with conditions files for $context..."
+    log_info "Testing verbose mode with conditions files for $context..."
     
     ./bin/searchctl --context $context --verbose rollover datastream test-logs --dry-run -f examples/rollover-conditions.json
 }
 
-# Check if test environment is running
-echo "🏥 Checking test environment..."
-if ! curl -f http://localhost:9200/_cluster/health >/dev/null 2>&1; then
-    echo "❌ Elasticsearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
-    exit 1
-fi
-
-if ! curl -f http://localhost:9201/_cluster/health >/dev/null 2>&1; then
-    echo "❌ OpenSearch not running. Start test environment first:"
-    echo "   ./scripts/start-test-env.sh"
-    exit 1
-fi
-
-echo "✅ Test environment is ready"
+# Check environment and run tests
+check_environment
 
 # Test with both engines
 echo ""
-echo "🔍 Testing Elasticsearch conditions files..."
+log_info "Testing Elasticsearch conditions files..."
 test_conditions_file "elasticsearch"
 test_output_formats "elasticsearch"
 test_verbose_mode "elasticsearch"
 
 echo ""
-echo "🔍 Testing OpenSearch conditions files..."
+log_info "Testing OpenSearch conditions files..."
 test_conditions_file "opensearch"
 test_output_formats "opensearch"
 test_verbose_mode "opensearch"
 
 # Validate the example conditions file
 echo ""
-echo "📋 Validating example conditions file..."
+log_info "Validating example conditions file..."
 if [[ -f "examples/rollover-conditions.json" ]]; then
-    echo "✅ Example conditions file exists"
+    log_success "Example conditions file exists"
     if jq . examples/rollover-conditions.json >/dev/null 2>&1; then
-        echo "✅ Example conditions file is valid JSON"
+        log_success "Example conditions file is valid JSON"
         echo "Contents:"
         jq . examples/rollover-conditions.json
     else
-        echo "❌ Example conditions file is invalid JSON"
+        log_error "Example conditions file is invalid JSON"
     fi
 else
-    echo "❌ Example conditions file not found"
+    log_error "Example conditions file not found"
 fi
 
 # Clean up
 echo ""
-echo "🧹 Cleaning up test files..."
+log_info "Cleaning up test files..."
 rm -rf "$TEST_DIR"
 
 echo ""
-echo "✅ All conditions file tests completed successfully!"
-echo "💡 The rollover conditions file functionality is working correctly"
+log_success "All conditions file tests completed successfully!"
+log_info "The rollover conditions file functionality is working correctly"

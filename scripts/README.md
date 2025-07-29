@@ -1,6 +1,6 @@
 # Test Scripts
 
-Automated testing for searchctl functionality.
+Automated testing for searchctl functionality with consistent logging and shared utilities.
 
 ## Quick Start
 
@@ -20,31 +20,41 @@ Automated testing for searchctl functionality.
 
 ## Scripts Overview
 
-| Script | Purpose | Safety | Usage |
-|--------|---------|---------|-------|
-| `integration-test.sh` | Core functionality validation | ✅ Safe (dry-run) | Daily CI |
-| `test-rollover.sh` | Rollover feature testing | ✅ Safe (dry-run) | Feature validation |
-| `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | Pre-release testing |
-| `test-performance.sh` | Performance benchmarking | ✅ Safe (dry-run) | Performance regression |
-| `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | Config testing |
-| `start-test-env.sh` | Environment setup | ✅ Safe | Setup |
-| `stop-test-env.sh` | Environment cleanup | ✅ Safe | Cleanup |
-| `check-status.sh` | Health verification | ✅ Safe | Debugging |
+| Script | Purpose | Safety | Duration | Usage |
+|--------|---------|---------|----------|-------|
+| `integration-test.sh` | Core functionality validation | ✅ Safe (dry-run) | ~30s | Daily CI |
+| `test-rollover.sh` | Rollover feature testing | ✅ Safe (dry-run) | ~45s | Feature validation |
+| `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | ~2m | Pre-release testing |
+| `test-performance.sh` | Performance benchmarking | ✅ Safe (dry-run) | ~1m | Performance regression |
+| `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | ~30s | Config testing |
+| `test-config.sh` | Configuration testing | ✅ Safe (read-only) | ~10s | Config validation |
+| `start-test-env.sh` | Environment setup | ✅ Safe | ~30s | Setup |
+| `stop-test-env.sh` | Environment cleanup | ✅ Safe | ~10s | Cleanup |
+| `check-status.sh` | Health verification | ✅ Safe | ~5s | Debugging |
 
-## Test Categories
+## Architecture
 
-### Core Features
+### Common Utilities (`common.sh`)
+- **Consistent Logging**: Color-coded output with `[INFO]`, `[SUCCESS]`, `[ERROR]` prefixes
+- **Environment Management**: Automated setup, health checks, cleanup
+- **Test Execution**: Standardized command execution with timing
+- **Performance Testing**: Benchmarking utilities for load testing
+- **Extensibility**: Reusable functions for future test development
+
+### Test Categories
+
+#### Core Features
 - **Cluster Operations**: health, info, connectivity
 - **Resource Management**: indices, nodes, data streams
 - **CRUD Operations**: create, get, delete resources
 
-### Rollover Features  
+#### Rollover Features  
 - **Conditions**: age, docs, size, primary shard limits
 - **Output Formats**: table, json, yaml
 - **Advanced Options**: lazy rollover, conditions files
 - **Error Handling**: missing args, invalid formats
 
-### Data Stream Features
+#### Data Stream Features
 - **Lifecycle**: create, list, delete data streams
 - **Integration**: with rollover operations
 - **Patterns**: wildcard matching, filtering
@@ -67,34 +77,64 @@ export TEST_TIMEOUT="60s"                          # Test timeout
 ## Adding New Tests
 
 ### 1. Create Test Script
+Use the common utilities for consistent functionality:
+
 ```bash
 #!/bin/bash
 set -e
 
-# Common setup
-source scripts/common.sh
+# Source common utilities
+source "$(dirname "$0")/common.sh"
+
+# Setup environment  
 setup_test_environment
+check_environment
 
 # Your tests here
 test_new_feature() {
-    echo "Testing new feature..."
-    ./bin/searchctl new-command --dry-run
+    log_info "Testing new feature..."
+    test_command "./bin/searchctl new-command --dry-run"
+    log_success "New feature test completed"
 }
 
 # Run tests
 test_new_feature
-echo "✅ New feature tests passed"
 ```
 
-### 2. Update Integration Script
+### 2. Available Utilities
+- `log_info()`, `log_success()`, `log_error()` - Consistent logging
+- `setup_test_environment()` - Build and configure
+- `check_environment()` - Verify services are running
+- `test_command()` - Execute with error handling
+- `time_command()` - Performance timing
+- `benchmark_command()` - Load testing
+- `test_both_engines()` - Test ES and OS together
+
+### 3. Update Integration Script
+### 3. Update Integration Script
 Add new test calls to `integration-test.sh`:
 ```bash
-echo "🧪 Testing new feature..."
+log_info "Testing new feature..."
 ./scripts/test-new-feature.sh
 ```
 
-### 3. Document in README
-Add entry to scripts table above.
+### 4. Document in Scripts Table
+Add entry to the scripts overview table above.
+
+## Best Practices
+
+### Script Development
+- **Use Common Utilities**: Source `common.sh` for consistent behavior
+- **Follow Naming**: Use `test-*.sh` pattern for test scripts
+- **Error Handling**: Use `set -e` and proper exit codes
+- **Logging**: Use `log_*()` functions for consistent output
+- **Safety**: Default to dry-run mode, require explicit flags for real operations
+
+### Performance Considerations
+- **Timing**: Use `time_command()` for performance testing
+- **Benchmarking**: Use `benchmark_command()` for repeated operations
+- **Cleanup**: Always clean up test data and temporary files
+- **Resource Limits**: Be mindful of memory and disk usage in tests
 
 ## CI/CD Integration
 

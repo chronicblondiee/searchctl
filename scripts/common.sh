@@ -10,35 +10,27 @@ BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-# Emojis for consistent output
-EMOJI_TEST="🧪"
-EMOJI_BUILD="🔨"
-EMOJI_SUCCESS="✅"
-EMOJI_ERROR="❌"
-EMOJI_INFO="💡"
-EMOJI_CLEAN="🧹"
-
 # Logging functions
 log_info() {
-    echo -e "${BLUE}${EMOJI_INFO} $1${NC}"
+    echo -e "${BLUE}[INFO] $1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}${EMOJI_SUCCESS} $1${NC}"
+    echo -e "${GREEN}[SUCCESS] $1${NC}"
 }
 
 log_error() {
-    echo -e "${RED}${EMOJI_ERROR} $1${NC}"
+    echo -e "${RED}[ERROR] $1${NC}"
 }
 
 log_test() {
-    echo -e "${YELLOW}${EMOJI_TEST} $1${NC}"
+    echo -e "${YELLOW}[TEST] $1${NC}"
 }
 
 # Build searchctl and set up test environment
 setup_test_environment() {
     export SEARCHCTL_CONFIG="examples/test-config.yaml"
-    echo "${EMOJI_BUILD} Building searchctl..."
+    echo "[BUILD] Building searchctl..."
     make build
     log_success "Build completed"
 }
@@ -49,7 +41,7 @@ time_command() {
     local description="$2"
     local start_time=$(date +%s.%N)
     
-    echo "⏱️  Starting: $description"
+    echo "[TIMING] Starting: $description"
     eval "$cmd"
     local exit_code=$?
     
@@ -57,9 +49,9 @@ time_command() {
     local duration=$(echo "$end_time - $start_time" | bc)
     
     if [ $exit_code -eq 0 ]; then
-        echo "✅ Completed in ${duration}s: $description"
+        echo "[TIMING] Completed in ${duration}s: $description"
     else
-        echo "❌ Failed after ${duration}s: $description"
+        echo "[TIMING] Failed after ${duration}s: $description"
     fi
     
     return $exit_code
@@ -71,16 +63,16 @@ test_command() {
     local quiet="${2:-false}"
     
     if [[ "$quiet" != "true" ]]; then
-        echo "💫 Running: $cmd"
+        echo "[EXEC] Running: $cmd"
     fi
     
     if eval "$cmd"; then
         if [[ "$quiet" != "true" ]]; then
-            echo "✅ Command succeeded"
+            echo "[EXEC] Command succeeded"
         fi
         return 0
     else
-        echo "❌ Command failed: $cmd"
+        echo "[EXEC] Command failed: $cmd"
         return 1
     fi
 }
@@ -173,7 +165,7 @@ benchmark_command() {
     local iterations="${2:-10}"
     local description="$3"
     
-    echo "🚀 Benchmarking: $description ($iterations iterations)"
+    echo "[BENCHMARK] Starting: $description ($iterations iterations)"
     
     local total_time=0
     local successful_runs=0
@@ -186,17 +178,17 @@ benchmark_command() {
             local duration=$(echo "$end_time - $start_time" | bc)
             total_time=$(echo "$total_time + $duration" | bc)
             ((successful_runs++))
-            echo "  Run $i: ${duration}s ✅"
+            echo "  Run $i: ${duration}s [OK]"
         else
-            echo "  Run $i: FAILED ❌"
+            echo "  Run $i: FAILED [FAIL]"
         fi
     done
     
     if [ $successful_runs -gt 0 ]; then
         local avg_time=$(echo "scale=3; $total_time / $successful_runs" | bc)
-        echo "📊 Results: $successful_runs/$iterations successful, avg time: ${avg_time}s"
+        echo "[BENCHMARK] Results: $successful_runs/$iterations successful, avg time: ${avg_time}s"
     else
-        echo "📊 Results: No successful runs"
+        echo "[BENCHMARK] Results: No successful runs"
         return 1
     fi
 }
