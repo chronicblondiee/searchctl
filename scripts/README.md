@@ -11,9 +11,10 @@ Automated testing for searchctl functionality with emoji-free logging and shared
 # Run core tests (recommended for daily use)
 ./scripts/integration-test.sh        # Core functionality (~30s)
 ./scripts/test-conditions.sh        # Conditions validation (~30s)
+./scripts/test-delete-confirmation.sh # Delete confirmation features (~20s)
 
 # Run performance tests (for regression testing)
-./scripts/test-performance.sh       # Performance benchmarks (~1m)
+./scripts/test-rollover-real.sh     # Real rollover operations (~2m)
 
 # Run real operations (use with caution - creates actual data)
 ./scripts/test-rollover-real.sh     # Real rollover operations (~2m)
@@ -41,8 +42,8 @@ make test-all                      # Full test suite
 | Script | Purpose | Safety | Duration | Usage |
 |--------|---------|---------|----------|-------|
 | `integration-test.sh` | Core functionality validation | ✅ Safe (dry-run) | ~30s | Daily CI |
+| `test-delete-confirmation.sh` | Delete confirmation features | ✅ Safe (with -y) | ~20s | Feature testing |
 | `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | ~2m | Pre-release testing |
-| `test-performance.sh` | Performance benchmarking | ✅ Safe (dry-run) | ~1m | Performance regression |
 | `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | ~30s | Config testing |
 | `test-config.sh` | Configuration testing | ✅ Safe (read-only) | ~10s | Config validation |
 | `start-test-env.sh` | Environment setup | ✅ Safe | ~30s | Setup |
@@ -217,7 +218,6 @@ make test-all
 ### Makefile Targets
 ```bash
 make test-integration    # Run integration tests
-make test-performance   # Run performance tests
 make test-all          # Run all test suites
 ```
 

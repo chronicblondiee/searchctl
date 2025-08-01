@@ -119,7 +119,7 @@ test_real_rollover() {
     
     # Clean up - delete the test data stream
     echo "Cleaning up test data stream..."
-    ./bin/searchctl --context $context delete datastream $test_datastream || echo "Cleanup failed"
+    ./bin/searchctl --context $context delete datastream $test_datastream -y || echo "Cleanup failed"
 }
 
 # Check environment and run tests
