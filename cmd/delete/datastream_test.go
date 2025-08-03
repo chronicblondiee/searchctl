@@ -7,12 +7,12 @@ import (
 func TestNewDeleteDataStreamCmd(t *testing.T) {
 	cmd := NewDeleteDataStreamCmd()
 
-	if cmd.Use != "datastream DATA_STREAM_NAME" {
-		t.Errorf("Expected Use to be 'datastream DATA_STREAM_NAME', got %s", cmd.Use)
+	if cmd.Use != "datastream DATA_STREAM_NAME_OR_PATTERN" {
+		t.Errorf("Expected Use to be 'datastream DATA_STREAM_NAME_OR_PATTERN', got %s", cmd.Use)
 	}
 
-	if cmd.Short != "Delete a data stream" {
-		t.Errorf("Expected Short to be 'Delete a data stream', got %s", cmd.Short)
+	if cmd.Short != "Delete a data stream or data streams matching a pattern" {
+		t.Errorf("Expected Short to be 'Delete a data stream or data streams matching a pattern', got %s", cmd.Short)
 	}
 
 	// Check aliases
@@ -24,5 +24,11 @@ func TestNewDeleteDataStreamCmd(t *testing.T) {
 	// Check args requirement
 	if cmd.Args == nil {
 		t.Error("Expected Args to be set")
+	}
+
+	// Check that -y flag is present
+	yFlag := cmd.Flag("yes")
+	if yFlag == nil {
+		t.Error("Expected -y/--yes flag to be present")
 	}
 }

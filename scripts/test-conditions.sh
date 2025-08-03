@@ -230,7 +230,7 @@ rm -rf "$TEST_DIR"
 
 # Clean up test datastreams and templates
 for context in elasticsearch opensearch; do
-    ./bin/searchctl --context $context delete datastream test-logs >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream test-logs -y >/dev/null 2>&1 || true
     
     # Clean up index template
     if [[ "$context" == "elasticsearch" ]]; then

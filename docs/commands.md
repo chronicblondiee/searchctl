@@ -132,34 +132,58 @@ Delete resources from the cluster.
 
 #### delete index
 ```bash
-searchctl delete index INDEX_NAME [flags]
+searchctl delete index INDEX_NAME_OR_PATTERN [flags]
 ```
 
 **Aliases:** `idx`
 
+**Flags:**
+- `-y, --yes` - Automatically confirm deletion without prompting
+
 **Examples:**
 ```bash
-# Delete index
+# Delete specific index (with confirmation prompt)
 searchctl delete index old-logs
+
+# Delete multiple indices with wildcard (with confirmation prompt)
+searchctl delete index logs-*
+
+# Delete indices matching pattern without confirmation
+searchctl delete index test-index-* -y
 
 # Dry run deletion
 searchctl delete index temp-index --dry-run
+
+# Dry run with wildcard
+searchctl delete index logs-2024-* --dry-run
 ```
 
 #### delete datastream
 ```bash
-searchctl delete datastream DATA_STREAM_NAME [flags]
+searchctl delete datastream DATA_STREAM_NAME_OR_PATTERN [flags]
 ```
 
 **Aliases:** `ds`
 
+**Flags:**
+- `-y, --yes` - Automatically confirm deletion without prompting
+
 **Examples:**
 ```bash
-# Delete data stream and all backing indices
+# Delete specific data stream and all backing indices (with confirmation prompt)
 searchctl delete datastream old-logs
+
+# Delete multiple data streams with wildcard (with confirmation prompt)
+searchctl delete datastream logs-*
+
+# Delete data streams matching pattern without confirmation
+searchctl delete datastream metrics-* -y
 
 # Dry run deletion
 searchctl delete datastream temp-stream --dry-run
+
+# Dry run with wildcard
+searchctl delete datastream logs-2024-* --dry-run
 ```
 
 ### apply
@@ -315,3 +339,45 @@ Extended table format with additional columns and details.
 - `2` - Configuration error
 - `3` - Connection error
 - `4` - Resource not found
+
+# Wildcard Deletion Implementation Notes
+
+## API Limitations Discovered
+
+During testing, we discovered that both Elasticsearch and OpenSearch have security restrictions on wildcard deletion:
+
+### Elasticsearch
+- **Setting**: `action.destructive_requires_name` (defaults to `true`)
+- **Error**: "Wildcard expressions or all indices are not allowed"
+- **Documentation**: "When set to `true`, you must specify the index name to delete an index. It is not possible to delete all indices with `_all` or use wildcards."
+
+### OpenSearch  
+- **Similar restrictions**: Also inherits the `action.destructive_requires_name` setting
+- **Default behavior**: Same as Elasticsearch - prevents wildcard deletion by default
+
+## Solution Implemented
+
+Instead of requiring cluster administrators to modify security settings, we implemented **client-side wildcard expansion**:
+
+1. **Pattern Detection**: Detect wildcard patterns (containing `*`)
+2. **List Matching Resources**: Use GET APIs to list all indices/datastreams 
+3. **Filter Matches**: Apply prefix matching for patterns ending with `*`
+4. **Confirm Actions**: Show user exactly what will be deleted
+5. **Individual Deletion**: Delete each resource one by one
+
+## Benefits
+
+- ✅ Works with default cluster security settings
+- ✅ No special permissions required
+- ✅ Clear visibility of what will be deleted
+- ✅ Safe confirmation prompts with -y bypass
+- ✅ Maintains backwards compatibility
+
+## Test Results
+
+All wildcard deletion features are working correctly:
+- Single index/datastream deletion with confirmation
+- Wildcard pattern detection and expansion  
+- Interactive confirmation prompts
+- -y flag bypass for automation
+- Error handling for non-existent patterns

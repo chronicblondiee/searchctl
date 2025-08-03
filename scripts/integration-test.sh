@@ -20,8 +20,8 @@ for context in elasticsearch opensearch; do
     fi
     
     # Cleanup any leftover test resources first
-    ./bin/searchctl --context $context delete datastream test-logs >/dev/null 2>&1 || true
-    ./bin/searchctl --context $context delete datastream logs-test >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream test-logs -y >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream logs-test -y >/dev/null 2>&1 || true
     curl -s -X DELETE "localhost:$port/_index_template/test-logs-template" >/dev/null 2>&1 || true
     curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
@@ -51,7 +51,7 @@ for context in elasticsearch opensearch; do
     # Test datastream creation with proper template
     test_command "./bin/searchctl --context $context create datastream test-logs" true
     test_command "./bin/searchctl --context $context get datastreams test-logs" true
-    test_command "./bin/searchctl --context $context delete datastream test-logs" true
+    test_command "./bin/searchctl --context $context delete datastream test-logs -y" true
     
     # Clean up template
     curl -s -X DELETE "localhost:$port/_index_template/test-logs-template" >/dev/null 2>&1 || true
@@ -60,7 +60,7 @@ for context in elasticsearch opensearch; do
     log_test "Testing rollover operations..."
     
     # Cleanup any existing test datastream first
-    ./bin/searchctl --context $context delete datastream logs-test >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream logs-test -y >/dev/null 2>&1 || true
     curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
     # Create index template for rollover testing
@@ -96,7 +96,7 @@ for context in elasticsearch opensearch; do
     test_command "./bin/searchctl --context $context rollover ds logs-test --max-age 7d" true
     
     # Cleanup test datastream and template
-    test_command "./bin/searchctl --context $context delete datastream logs-test" true
+    test_command "./bin/searchctl --context $context delete datastream logs-test -y" true
     curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
     log_success "$context tests completed"

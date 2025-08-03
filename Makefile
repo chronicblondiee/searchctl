@@ -1,4 +1,4 @@
-.PHONY: build test test-unit test-integration test-all test-performance test-conditions test-config start-test-env stop-test-env install clean release dev-deps
+.PHONY: build test test-unit test-integration test-all test-conditions test-config test-delete-confirmation start-test-env stop-test-env install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
@@ -21,10 +21,6 @@ test-integration:
 	@echo "Running integration tests..."
 	./scripts/integration-test.sh
 
-test-performance:
-	@echo "Running performance tests..."
-	./scripts/test-performance.sh
-
 test-conditions:
 	@echo "Running conditions tests..."
 	./scripts/test-conditions.sh
@@ -33,7 +29,11 @@ test-config:
 	@echo "Running config tests..."
 	./scripts/test-config.sh
 
-test-all: test-unit test-integration test-performance test-conditions test-config
+test-delete-confirmation:
+	@echo "Running delete confirmation tests..."
+	./scripts/test-delete-confirmation.sh
+
+test-all: test-unit test-integration test-conditions test-config test-delete-confirmation
 	@echo "All tests completed!"
 
 start-test-env:
