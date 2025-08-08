@@ -7,6 +7,7 @@ import (
 
 	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/chronicblondiee/searchctl/pkg/output"
+	"github.com/chronicblondiee/searchctl/pkg/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -120,7 +121,7 @@ func readConditionsFromFile(filename string) (map[string]interface{}, error) {
 	return conditions, nil
 }
 
-func displayRolloverResult(response *client.RolloverResponse) {
+func displayRolloverResult(response *types.RolloverResponse) {
 	fmt.Printf("Rollover Status: %s\n", getStatusMessage(response.RolledOver))
 	if response.RolledOver {
 		fmt.Printf("Old Index: %s\n", response.OldIndex)
