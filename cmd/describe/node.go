@@ -15,7 +15,7 @@ func NewDescribeNodeCmd() *cobra.Command {
 		Use:     "node NODE_ID",
 		Short:   "Describe a node",
 		Long:    "Show detailed information about a specific node by name or IP.",
-		Aliases: []string{"no"},
+		Aliases: []string{"node", "no"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			nodeID := args[0]

@@ -15,7 +15,7 @@ func NewDescribeIndexCmd() *cobra.Command {
 		Use:     "index INDEX_NAME",
 		Short:   "Describe an index",
 		Long:    "Show detailed information about a specific index.",
-		Aliases: []string{"idx"},
+		Aliases: []string{"index", "idx"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			indexName := args[0]

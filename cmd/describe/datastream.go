@@ -15,7 +15,7 @@ func NewDescribeDataStreamCmd() *cobra.Command {
 		Use:     "datastream NAME",
 		Short:   "Describe a data stream",
 		Long:    "Show detailed information about a specific data stream.",
-		Aliases: []string{"datastreams", "ds"},
+		Aliases: []string{"datastream", "datastreams", "ds"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

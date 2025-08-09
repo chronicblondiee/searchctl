@@ -17,7 +17,7 @@ func NewDescribeIndexTemplateCmd() *cobra.Command {
 		Use:     "index-template NAME",
 		Short:   "Describe an index template",
 		Long:    "Show detailed information about a specific composable index template.",
-		Aliases: []string{"indextemplate", "template", "it", "idx-template"},
+		Aliases: []string{"idx-templates", "template", "it", "index-template", "indextemplates", "indextemplate"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

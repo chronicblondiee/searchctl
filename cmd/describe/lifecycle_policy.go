@@ -17,7 +17,7 @@ func NewDescribeLifecyclePolicyCmd() *cobra.Command {
 		Use:     "lifecycle-policy NAME",
 		Short:   "Describe a lifecycle policy",
 		Long:    "Show detailed information about a specific lifecycle policy (ILM or ISM).",
-		Aliases: []string{"lifecyclepolicy", "ilm", "ism", "lp", "lifecycle"},
+		Aliases: []string{"lifecyclepolicy", "lifecycle-policies", "lifecyclepolicies", "ilm", "ism", "lp", "lifecycle"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

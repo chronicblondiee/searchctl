@@ -17,7 +17,7 @@ func NewDescribeComponentTemplateCmd() *cobra.Command {
 		Use:     "component-template NAME",
 		Short:   "Describe a component template",
 		Long:    "Show detailed information about a specific component template.",
-		Aliases: []string{"componenttemplate", "ct"},
+		Aliases: []string{"componenttemplates", "component-template", "componenttemplate", "ct", "comp-templates", "comp-template"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			name := args[0]

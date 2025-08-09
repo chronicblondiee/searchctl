@@ -16,7 +16,7 @@ func NewDeleteComponentTemplateCmd() *cobra.Command {
 		Use:     "component-template TEMPLATE_NAME",
 		Short:   "Delete a component template",
 		Long:    "Delete a component template from the search cluster.",
-		Aliases: []string{"componenttemplate", "ct", "component-templates", "componenttemplates", "comp-template", "comp-templates"},
+		Aliases: []string{"componenttemplates", "component-template", "componenttemplate", "ct", "comp-templates", "comp-template"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			templateName := args[0]
@@ -35,7 +35,7 @@ func NewDeleteComponentTemplateCmd() *cobra.Command {
 					fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
 					os.Exit(1)
 				}
-				
+
 				response = strings.TrimSpace(strings.ToLower(response))
 				if response != "y" && response != "yes" {
 					fmt.Println("Operation cancelled")
@@ -59,6 +59,6 @@ func NewDeleteComponentTemplateCmd() *cobra.Command {
 	}
 
 	cmd.Flags().BoolP("yes", "y", false, "automatically confirm deletion without prompting")
-	
+
 	return cmd
 }

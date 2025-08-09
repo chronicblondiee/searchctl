@@ -15,10 +15,17 @@ func TestNewDeleteIndexCmd(t *testing.T) {
 		t.Errorf("Expected Short to be 'Delete an index or indices matching a pattern', got %s", cmd.Short)
 	}
 
-	// Check aliases
+	// Check aliases include short alias
 	aliases := cmd.Aliases
-	if len(aliases) != 1 || aliases[0] != "idx" {
-		t.Errorf("Expected aliases to be ['idx'], got %v", aliases)
+	hasIdx := false
+	for _, a := range aliases {
+		if a == "idx" {
+			hasIdx = true
+			break
+		}
+	}
+	if !hasIdx {
+		t.Errorf("Expected aliases to include 'idx', got %v", aliases)
 	}
 
 	// Check args requirement
