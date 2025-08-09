@@ -16,7 +16,7 @@ func NewDeleteComponentTemplateCmd() *cobra.Command {
 		Use:     "component-template TEMPLATE_NAME",
 		Short:   "Delete a component template",
 		Long:    "Delete a component template from the search cluster.",
-		Aliases: []string{"componenttemplate", "ct"},
+		Aliases: []string{"componenttemplate", "ct", "component-templates", "componenttemplates", "comp-template", "comp-templates"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			templateName := args[0]

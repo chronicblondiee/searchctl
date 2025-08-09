@@ -15,7 +15,7 @@ func NewGetComponentTemplatesCmd() *cobra.Command {
 		Use:     "component-templates [PATTERN]",
 		Short:   "Get component templates",
 		Long:    "Get component templates from the search cluster.",
-		Aliases: []string{"componenttemplates", "ct"},
+		Aliases: []string{"componenttemplates", "component-template", "componenttemplate", "ct", "comp-templates", "comp-template"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			pattern := ""

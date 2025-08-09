@@ -15,7 +15,7 @@ func NewGetIndexTemplatesCmd() *cobra.Command {
 		Use:     "index-templates [PATTERN]",
 		Short:   "Get index templates",
 		Long:    "Get index templates from the search cluster.",
-		Aliases: []string{"templates", "it"},
+		Aliases: []string{"idx-templates", "template", "it", "index-template", "indextemplates", "indextemplate"},
 		Args:    cobra.MaximumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			pattern := ""
