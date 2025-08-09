@@ -1,4 +1,4 @@
-.PHONY: build test test-unit test-integration test-all test-conditions test-config test-delete-confirmation start-test-env stop-test-env install clean release dev-deps
+.PHONY: build test test-unit test-integration test-all test-conditions test-config test-delete-confirmation test-lifecycle-policies start-test-env stop-test-env install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
@@ -33,7 +33,11 @@ test-delete-confirmation:
 	@echo "Running delete confirmation tests..."
 	./scripts/test-delete-confirmation.sh
 
-test-all: test-unit test-integration test-conditions test-config test-delete-confirmation
+test-lifecycle-policies:
+	@echo "Running lifecycle policies tests..."
+	./scripts/test-lifecycle-policies.sh
+
+test-all: test-unit test-integration test-conditions test-config test-delete-confirmation test-lifecycle-policies
 	@echo "All tests completed!"
 
 start-test-env:

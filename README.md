@@ -48,19 +48,26 @@ searchctl delete ilm old-policy -y              # Same as above (auto-confirm)
 searchctl delete lp old-policy -y               # Same as above (shortest alias)
 
 # Describe resources
-searchctl describe index my-logs-2024.01        # Show detailed index info
-searchctl describe index logs-nginx -o yaml     # Describe with YAML output
+searchctl describe index my-logs-2024.01                    # Index details
+searchctl describe index logs-nginx -o yaml                 # Index as YAML
+searchctl describe lifecycle-policy my-policy --show-body   # ILM/ISM policy
+searchctl describe lifecycle-policy my-policy -o yaml       # Policy as YAML
+searchctl describe index-template logs-template --show-body # Composable template
+searchctl describe component-template base-settings --show-body
+searchctl describe datastream logs-app -o yaml              # Data stream details
+searchctl describe node node-1 -o yaml                      # Node details
 ```
 
 ### Data Stream Management
 ```bash
 # Rollover operations
-searchctl rollover datastream logs --max-age 7d --dry-run       # Age-based rollover
-searchctl rollover datastream logs --max-docs 1M                # Document count rollover
-searchctl rollover datastream logs --max-size 50gb              # Size-based rollover
-searchctl rollover datastream logs --max-primary-shard-size 25gb # Shard size rollover
-searchctl rollover datastream logs --lazy --max-age 1d          # Lazy rollover
-searchctl rollover datastream logs -f conditions.json          # Conditions from file
+searchctl rollover datastream logs --max-age 7d --dry-run         # Age-based rollover
+searchctl rollover datastream logs --max-docs 1M                  # Document count rollover
+searchctl rollover datastream logs --max-size 50gb                # Size-based rollover
+searchctl rollover datastream logs --max-primary-shard-size 25gb  # Shard size rollover
+searchctl rollover datastream logs --lazy --max-age 1d            # Lazy rollover
+searchctl rollover datastream logs -f examples/rollover-conditions.json  # From JSON file
+searchctl rollover datastream logs -f examples/rollover-conditions.yaml  # From YAML file
 ```
 
 ### Cluster Operations

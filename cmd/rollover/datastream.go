@@ -4,12 +4,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/chronicblondiee/searchctl/pkg/output"
 	"github.com/chronicblondiee/searchctl/pkg/types"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+	yaml "gopkg.in/yaml.v3"
 )
 
 func NewRolloverDataStreamCmd() *cobra.Command {
@@ -101,7 +103,7 @@ func NewRolloverDataStreamCmd() *cobra.Command {
 	cmd.Flags().StringVar(&maxSize, "max-size", "", "Maximum index size before rollover (e.g., 50gb, 5gb)")
 	cmd.Flags().StringVar(&maxPrimaryShardSize, "max-primary-shard-size", "", "Maximum primary shard size before rollover (e.g., 50gb)")
 	cmd.Flags().Int64Var(&maxPrimaryShardDocs, "max-primary-shard-docs", 0, "Maximum number of documents in primary shard before rollover")
-	cmd.Flags().StringVarP(&conditionsFile, "conditions-file", "f", "", "JSON file containing rollover conditions")
+	cmd.Flags().StringVarP(&conditionsFile, "conditions-file", "f", "", "file containing rollover conditions (JSON or YAML)")
 	cmd.Flags().BoolVar(&lazy, "lazy", false, "Only mark data stream for rollover at next write (data streams only)")
 
 	return cmd
@@ -113,12 +115,72 @@ func readConditionsFromFile(filename string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	var conditions map[string]interface{}
-	if err := json.Unmarshal(data, &conditions); err != nil {
-		return nil, err
+	// Try by extension first
+	ext := filepath.Ext(filename)
+	switch ext {
+	case ".yaml", ".yml":
+		// YAML parse with key conversion
+		var raw interface{}
+		if err := yaml.Unmarshal(data, &raw); err != nil {
+			return nil, fmt.Errorf("failed to parse YAML: %w", err)
+		}
+		converted, ok := convertInterfaceKeys(raw).(map[string]interface{})
+		if !ok {
+			return nil, fmt.Errorf("invalid YAML structure for conditions; expected mapping at top level")
+		}
+		return converted, nil
+	case ".json":
+		var conditions map[string]interface{}
+		if err := json.Unmarshal(data, &conditions); err != nil {
+			return nil, fmt.Errorf("failed to parse JSON: %w", err)
+		}
+		return conditions, nil
+	default:
+		// Try JSON first, then YAML as fallback
+		var conditions map[string]interface{}
+		if err := json.Unmarshal(data, &conditions); err == nil {
+			return conditions, nil
+		}
+		var raw interface{}
+		if err := yaml.Unmarshal(data, &raw); err == nil {
+			converted, ok := convertInterfaceKeys(raw).(map[string]interface{})
+			if !ok {
+				return nil, fmt.Errorf("invalid YAML structure for conditions; expected mapping at top level")
+			}
+			return converted, nil
+		}
+		return nil, fmt.Errorf("failed to parse conditions file as JSON or YAML")
 	}
+}
 
-	return conditions, nil
+// convertInterfaceKeys converts map[interface{}]interface{} to map[string]interface{} recursively
+func convertInterfaceKeys(value interface{}) interface{} {
+	switch typed := value.(type) {
+	case map[interface{}]interface{}:
+		result := make(map[string]interface{}, len(typed))
+		for k, v := range typed {
+			key, ok := k.(string)
+			if !ok {
+				// skip non-string keys
+				continue
+			}
+			result[key] = convertInterfaceKeys(v)
+		}
+		return result
+	case map[string]interface{}:
+		result := make(map[string]interface{}, len(typed))
+		for k, v := range typed {
+			result[k] = convertInterfaceKeys(v)
+		}
+		return result
+	case []interface{}:
+		for i, item := range typed {
+			typed[i] = convertInterfaceKeys(item)
+		}
+		return typed
+	default:
+		return typed
+	}
 }
 
 func displayRolloverResult(response *types.RolloverResponse) {
