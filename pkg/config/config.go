@@ -9,7 +9,6 @@ import (
 )
 
 type Config struct {
-	APIVersion     string    `yaml:"apiVersion"`
 	Kind           string    `yaml:"kind"`
 	CurrentContext string    `yaml:"current-context"`
 	Contexts       []Context `yaml:"contexts"`
@@ -82,7 +81,6 @@ func InitConfig(cfgFile string) error {
 
 	// Use direct viper access for hyphenated keys since viper may not unmarshal them correctly
 	config = &Config{
-		APIVersion:     viper.GetString("apiVersion"),
 		Kind:           viper.GetString("kind"),
 		CurrentContext: viper.GetString("current-context"),
 	}
@@ -103,7 +101,6 @@ func InitConfig(cfgFile string) error {
 
 func createDefaultConfig() error {
 	defaultConfig := &Config{
-		APIVersion:     "v1",
 		Kind:           "Config",
 		CurrentContext: "default",
 		Contexts: []Context{

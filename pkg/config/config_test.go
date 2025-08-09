@@ -29,9 +29,6 @@ func TestInitConfigDefault(t *testing.T) {
 		t.Fatal("Expected config to be initialized")
 	}
 
-	if cfg.APIVersion != "v1" {
-		t.Errorf("Expected APIVersion v1, got %s", cfg.APIVersion)
-	}
 	if cfg.Kind != "Config" {
 		t.Errorf("Expected Kind Config, got %s", cfg.Kind)
 	}

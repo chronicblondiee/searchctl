@@ -25,7 +25,8 @@ spec:
             hostname:
               type: keyword
         labels:
-          type: flattened
+          type: object
+          enabled: false
         tags:
           type: keyword
         ecs:
@@ -33,5 +34,5 @@ spec:
             version:
               type: keyword
   _meta:
-    description: "Common observability fields mapping"
+    description: "Common observability fields mapping (OpenSearch compatible)"
     version: 1

@@ -21,6 +21,10 @@ type SearchClient interface {
 	GetIndexTemplate(name string) (*types.IndexTemplate, error)
 	CreateIndexTemplate(name string, body map[string]interface{}) error
 	DeleteIndexTemplate(name string) error
+	GetComponentTemplates(pattern string) ([]types.ComponentTemplate, error)
+	GetComponentTemplate(name string) (*types.ComponentTemplate, error)
+	CreateComponentTemplate(name string, body map[string]interface{}) error
+	DeleteComponentTemplate(name string) error
 }
 
 type Client struct {
@@ -100,4 +104,20 @@ func (c *Client) CreateIndexTemplate(name string, body map[string]interface{}) e
 
 func (c *Client) DeleteIndexTemplate(name string) error {
 	return c.clientset.Indices().Templates().Delete(name)
+}
+
+func (c *Client) GetComponentTemplates(pattern string) ([]types.ComponentTemplate, error) {
+	return c.clientset.Indices().ComponentTemplates().List(pattern)
+}
+
+func (c *Client) GetComponentTemplate(name string) (*types.ComponentTemplate, error) {
+	return c.clientset.Indices().ComponentTemplates().Get(name)
+}
+
+func (c *Client) CreateComponentTemplate(name string, body map[string]interface{}) error {
+	return c.clientset.Indices().ComponentTemplates().Create(name, body)
+}
+
+func (c *Client) DeleteComponentTemplate(name string) error {
+	return c.clientset.Indices().ComponentTemplates().Delete(name)
 }
