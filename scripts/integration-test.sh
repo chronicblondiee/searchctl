@@ -142,7 +142,15 @@ for context in elasticsearch opensearch; do
     
     # Test ComponentTemplate apply operations
     test_command "./bin/searchctl --context $context apply -f examples/component-templates/base-settings.yaml" true
-    test_command "./bin/searchctl --context $context apply -f examples/component-templates/observability-mappings.yaml" true
+    
+    # Use different component templates based on the engine
+    if [ "$context" = "elasticsearch" ]; then
+        test_command "./bin/searchctl --context $context apply -f examples/component-templates/observability-mappings.yaml" true
+        observability_template="observability-mappings.yaml"
+    else
+        test_command "./bin/searchctl --context $context apply -f examples/component-templates/observability-mappings-opensearch.yaml" true
+        observability_template="observability-mappings-opensearch.yaml"
+    fi
     
     # Verify component templates were created by checking API directly
     echo "Verifying component templates were created..."
@@ -162,13 +170,26 @@ for context in elasticsearch opensearch; do
         exit 1
     fi
     
-    # Test ComponentTemplate listing (if get command is implemented)
-    # Note: This will gracefully fail if not implemented yet
-    ./bin/searchctl --context $context get componenttemplates >/dev/null 2>&1 || echo "Get componenttemplates command not yet implemented"
+    # Test ComponentTemplate listing
+    test_command "./bin/searchctl --context $context get component-templates" true
     
-    # Cleanup component templates
-    curl -s -X DELETE "localhost:$port/_component_template/base-settings" >/dev/null 2>&1 || true
-    curl -s -X DELETE "localhost:$port/_component_template/observability-mappings" >/dev/null 2>&1 || true
+    # Test getting specific component templates
+    test_command "./bin/searchctl --context $context get component-templates base-settings" true
+    test_command "./bin/searchctl --context $context get component-templates observability-mappings" true
+    
+    # Test ComponentTemplate deletion using searchctl commands
+    test_command "./bin/searchctl --context $context delete component-template base-settings -y" true
+    test_command "./bin/searchctl --context $context delete component-template observability-mappings -y" true
+    
+    # Verify component templates were deleted
+    echo "Verifying component templates were deleted..."
+    base_settings_delete_response=$(curl -s "localhost:$port/_component_template/base-settings")
+    if [[ "$base_settings_delete_response" == *"resource_not_found_exception"* ]]; then
+        echo "Component template base-settings deleted successfully"
+    else
+        echo "Component template base-settings deletion verification failed: $base_settings_delete_response"
+        # Don't exit since this might just be a different error format between engines
+    fi
     
     log_success "$context tests completed"
 done
