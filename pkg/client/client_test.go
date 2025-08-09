@@ -3,11 +3,11 @@ package client_test
 import (
 	"testing"
 
-	"github.com/chronicblondiee/searchctl/pkg/client"
+	"github.com/chronicblondiee/searchctl/pkg/types"
 )
 
 func TestClusterHealthStruct(t *testing.T) {
-	health := client.ClusterHealth{
+	health := types.ClusterHealth{
 		ClusterName:         "test-cluster",
 		Status:              "green",
 		NumberOfNodes:       3,
@@ -28,7 +28,7 @@ func TestClusterHealthStruct(t *testing.T) {
 }
 
 func TestClusterInfoStruct(t *testing.T) {
-	info := client.ClusterInfo{
+	info := types.ClusterInfo{
 		Name:        "test-node",
 		ClusterName: "test-cluster",
 		ClusterUUID: "test-uuid",
@@ -47,7 +47,7 @@ func TestClusterInfoStruct(t *testing.T) {
 }
 
 func TestIndexStruct(t *testing.T) {
-	index := client.Index{
+	index := types.Index{
 		Name:             "test-index",
 		Health:           "green",
 		Status:           "open",
@@ -68,7 +68,7 @@ func TestIndexStruct(t *testing.T) {
 }
 
 func TestNodeStruct(t *testing.T) {
-	node := client.Node{
+	node := types.Node{
 		Name:        "node-1",
 		Host:        "127.0.0.1",
 		IP:          "127.0.0.1",
@@ -88,10 +88,10 @@ func TestNodeStruct(t *testing.T) {
 }
 
 func TestDataStreamStruct(t *testing.T) {
-	dataStream := client.DataStream{
+	dataStream := types.DataStream{
 		Name:           "logs-nginx",
-		TimestampField: client.TimestampFieldType{Name: "@timestamp"},
-		Indices: []client.DataStreamIndex{
+		TimestampField: types.TimestampFieldType{Name: "@timestamp"},
+		Indices: []types.DataStreamIndex{
 			{IndexName: "logs-nginx-000001", IndexUUID: "uuid1"},
 			{IndexName: "logs-nginx-000002", IndexUUID: "uuid2"},
 		},
@@ -119,7 +119,7 @@ func TestDataStreamStruct(t *testing.T) {
 }
 
 func TestRolloverResponseStruct(t *testing.T) {
-	response := client.RolloverResponse{
+	response := types.RolloverResponse{
 		Acknowledged:       true,
 		ShardsAcknowledged: true,
 		OldIndex:           "logs-nginx-000001",

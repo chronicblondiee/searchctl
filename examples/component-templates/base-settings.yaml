@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ComponentTemplate
+metadata:
+  name: base-settings
+spec:
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      index:
+        refresh_interval: "5s"
+        max_result_window: 10000
+  _meta:
+    description: "Base settings for all data streams"
+    version: 1

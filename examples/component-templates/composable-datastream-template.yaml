@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: IndexTemplate
+metadata:
+  name: composable-datastream-template
+spec:
+  index_patterns:
+  - "observability-*"
+  priority: 150
+  data_stream: {}
+  composed_of:
+  - "base-settings"
+  - "observability-mappings"
+  template:
+    settings:
+      # Override or add specific settings
+      index:
+        lifecycle:
+          name: "observability-policy"
+    mappings:
+      properties:
+        # Add template-specific fields
+        data_type:
+          type: keyword
+          # logs, metrics, traces
+        pipeline:
+          type: keyword
+        processed_at:
+          type: date
+  _meta:
+    description: "Composable template using component templates for observability data"
+    version: 1

@@ -1,0 +1,108 @@
+apiVersion: v1
+kind: IndexTemplate
+metadata:
+  name: traces-datastream-template
+spec:
+  index_patterns:
+  - "traces-*"
+  priority: 200
+  data_stream: {}
+  template:
+    settings:
+      number_of_shards: 2
+      number_of_replicas: 0
+      index:
+        refresh_interval: "5s"
+        lifecycle:
+          name: "traces-policy"
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+          format: "strict_date_optional_time||epoch_millis"
+        trace:
+          properties:
+            id:
+              type: keyword
+            parent_id:
+              type: keyword
+            span_id:
+              type: keyword
+        span:
+          properties:
+            name:
+              type: keyword
+            kind:
+              type: keyword
+              # server, client, producer, consumer, internal
+            status:
+              properties:
+                code:
+                  type: integer
+                message:
+                  type: text
+            duration:
+              properties:
+                us:
+                  type: long
+                  # Duration in microseconds
+        service:
+          properties:
+            name:
+              type: keyword
+            version:
+              type: keyword
+            environment:
+              type: keyword
+        resource:
+          properties:
+            attributes:
+              type: flattened
+        attributes:
+          type: flattened
+        events:
+          type: nested
+          properties:
+            name:
+              type: keyword
+            timestamp:
+              type: date
+            attributes:
+              type: flattened
+        links:
+          type: nested
+          properties:
+            trace_id:
+              type: keyword
+            span_id:
+              type: keyword
+            attributes:
+              type: flattened
+        process:
+          properties:
+            pid:
+              type: long
+            command_line:
+              type: keyword
+        http:
+          properties:
+            method:
+              type: keyword
+            url:
+              type: keyword
+            status_code:
+              type: integer
+            user_agent:
+              type: keyword
+        db:
+          properties:
+            system:
+              type: keyword
+            statement:
+              type: text
+              index: false
+            operation:
+              type: keyword
+  _meta:
+    description: "Template for distributed tracing data streams"
+    version: 1

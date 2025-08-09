@@ -35,10 +35,12 @@ for context in elasticsearch opensearch; do
     test_command "./bin/searchctl --context $context get datastreams" true
     
     # Create index template first (required for data streams)
+    echo "Creating index template for test-logs..."
     curl -s -X PUT "localhost:$port/_index_template/test-logs-template" \
         -H "Content-Type: application/json" \
         -d '{
             "index_patterns": ["test-logs*"],
+            "priority": 200,
             "data_stream": {},
             "template": {
                 "settings": {
@@ -46,7 +48,22 @@ for context in elasticsearch opensearch; do
                     "number_of_replicas": 0
                 }
             }
-        }' >/dev/null 2>&1 || true
+        }' || {
+            echo "Failed to create index template for test-logs"
+            exit 1
+        }
+    
+    # Wait a moment for template to be available
+    sleep 2
+    
+    # Verify template exists
+    template_response=$(curl -s "localhost:$port/_index_template/test-logs-template")
+    if [[ "$template_response" == *"index_template"* ]]; then
+        echo "Template test-logs-template created successfully"
+    else
+        echo "Template verification failed: $template_response"
+        exit 1
+    fi
     
     # Test datastream creation with proper template
     test_command "./bin/searchctl --context $context create datastream test-logs" true
@@ -63,11 +80,13 @@ for context in elasticsearch opensearch; do
     ./bin/searchctl --context $context delete datastream logs-test -y >/dev/null 2>&1 || true
     curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
-    # Create index template for rollover testing
+    # Create index template for rollover testing with higher priority to avoid conflicts
+    echo "Creating index template for logs-test..."
     curl -s -X PUT "localhost:$port/_index_template/logs-test-template" \
         -H "Content-Type: application/json" \
         -d '{
             "index_patterns": ["logs-test*"],
+            "priority": 200,
             "data_stream": {},
             "template": {
                 "settings": {
@@ -75,7 +94,22 @@ for context in elasticsearch opensearch; do
                     "number_of_replicas": 0
                 }
             }
-        }' >/dev/null 2>&1 || true
+        }' || {
+            echo "Failed to create index template for logs-test"
+            exit 1
+        }
+    
+    # Wait a moment for template to be available
+    sleep 2
+    
+    # Verify template exists
+    rollover_template_response=$(curl -s "localhost:$port/_index_template/logs-test-template")
+    if [[ "$rollover_template_response" == *"index_template"* ]]; then
+        echo "Template logs-test-template created successfully"
+    else
+        echo "Rollover template verification failed: $rollover_template_response"
+        exit 1
+    fi
     
     # Create test datastream for rollover testing
     test_command "./bin/searchctl --context $context create datastream logs-test" true

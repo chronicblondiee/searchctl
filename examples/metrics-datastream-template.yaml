@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: IndexTemplate
+metadata:
+  name: metrics-datastream-template
+spec:
+  index_patterns:
+  - "metrics-*"
+  priority: 200
+  data_stream: {}
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+      index:
+        refresh_interval: "30s"
+        codec: "best_compression"
+        lifecycle:
+          name: "metrics-policy"
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+          format: "strict_date_optional_time||epoch_millis"
+        metric:
+          properties:
+            name:
+              type: keyword
+            type:
+              type: keyword
+              # counter, gauge, histogram, summary
+            unit:
+              type: keyword
+            value:
+              type: double
+            labels:
+              type: flattened
+        host:
+          properties:
+            name:
+              type: keyword
+            ip:
+              type: ip
+            architecture:
+              type: keyword
+            os:
+              properties:
+                name:
+                  type: keyword
+                version:
+                  type: keyword
+        service:
+          properties:
+            name:
+              type: keyword
+            version:
+              type: keyword
+            environment:
+              type: keyword
+        container:
+          properties:
+            id:
+              type: keyword
+            name:
+              type: keyword
+            image:
+              type: keyword
+        kubernetes:
+          properties:
+            namespace:
+              type: keyword
+            pod:
+              type: keyword
+            node:
+              type: keyword
+  _meta:
+    description: "Template for metrics data streams with time-series data support"
+    version: 1
