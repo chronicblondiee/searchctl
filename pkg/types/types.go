@@ -98,3 +98,10 @@ type TemplateDefinition struct {
 	Mappings map[string]interface{} `json:"mappings,omitempty"`
 	Aliases  map[string]interface{} `json:"aliases,omitempty"`
 }
+
+type ComponentTemplate struct {
+	Name     string                 `json:"name"`
+	Template TemplateDefinition     `json:"template,omitempty"`
+	Version  int                    `json:"version,omitempty"`
+	Meta     map[string]interface{} `json:"_meta,omitempty"`
+}

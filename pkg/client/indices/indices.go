@@ -17,6 +17,10 @@ type templatesClient struct {
 	restClient *rest.Client
 }
 
+type componentTemplatesClient struct {
+	restClient *rest.Client
+}
+
 func New(restClient *rest.Client) Interface {
 	return &client{
 		restClient: restClient,
@@ -92,6 +96,10 @@ func (c *client) Delete(name string) error {
 
 func (c *client) Templates() TemplatesInterface {
 	return &templatesClient{restClient: c.restClient}
+}
+
+func (c *client) ComponentTemplates() ComponentTemplatesInterface {
+	return &componentTemplatesClient{restClient: c.restClient}
 }
 
 func (c *templatesClient) List(pattern string) ([]types.IndexTemplate, error) {
@@ -182,6 +190,99 @@ func (c *templatesClient) Delete(name string) error {
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("error deleting index template: %s", string(resp.Body))
+	}
+
+	return nil
+}
+
+func (c *componentTemplatesClient) List(pattern string) ([]types.ComponentTemplate, error) {
+	templatePattern := "*"
+	if pattern != "" {
+		templatePattern = pattern
+	}
+
+	path := fmt.Sprintf("/_component_template/%s", templatePattern)
+	resp, err := c.restClient.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error getting component templates: %s", string(resp.Body))
+	}
+
+	var response struct {
+		ComponentTemplates []struct {
+			Name              string                 `json:"name"`
+			ComponentTemplate types.ComponentTemplate `json:"component_template"`
+		} `json:"component_templates"`
+	}
+	if err := json.Unmarshal(resp.Body, &response); err != nil {
+		return nil, err
+	}
+
+	var templates []types.ComponentTemplate
+	for _, template := range response.ComponentTemplates {
+		template.ComponentTemplate.Name = template.Name
+		templates = append(templates, template.ComponentTemplate)
+	}
+
+	return templates, nil
+}
+
+func (c *componentTemplatesClient) Get(name string) (*types.ComponentTemplate, error) {
+	path := fmt.Sprintf("/_component_template/%s", name)
+	resp, err := c.restClient.Get(path)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error getting component template: %s", string(resp.Body))
+	}
+
+	var response struct {
+		ComponentTemplates []struct {
+			Name              string                 `json:"name"`
+			ComponentTemplate types.ComponentTemplate `json:"component_template"`
+		} `json:"component_templates"`
+	}
+	if err := json.Unmarshal(resp.Body, &response); err != nil {
+		return nil, err
+	}
+
+	if len(response.ComponentTemplates) == 0 {
+		return nil, fmt.Errorf("component template %q not found", name)
+	}
+
+	template := response.ComponentTemplates[0].ComponentTemplate
+	template.Name = response.ComponentTemplates[0].Name
+	return &template, nil
+}
+
+func (c *componentTemplatesClient) Create(name string, body map[string]interface{}) error {
+	path := fmt.Sprintf("/_component_template/%s", name)
+	resp, err := c.restClient.Put(path, body)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("error creating component template: %s", string(resp.Body))
+	}
+
+	return nil
+}
+
+func (c *componentTemplatesClient) Delete(name string) error {
+	path := fmt.Sprintf("/_component_template/%s", name)
+	resp, err := c.restClient.Delete(path)
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("error deleting component template: %s", string(resp.Body))
 	}
 
 	return nil
