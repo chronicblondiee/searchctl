@@ -14,7 +14,7 @@ func NewDeleteIndexTemplateCmd() *cobra.Command {
 		Use:     "index-template TEMPLATE_NAME",
 		Short:   "Delete an index template",
 		Long:    "Delete an index template from the search cluster.",
-		Aliases: []string{"template", "it"},
+		Aliases: []string{"template", "it", "index-templates", "indextemplates", "indextemplate"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			templateName := args[0]
