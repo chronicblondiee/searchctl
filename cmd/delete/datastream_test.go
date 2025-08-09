@@ -15,10 +15,17 @@ func TestNewDeleteDataStreamCmd(t *testing.T) {
 		t.Errorf("Expected Short to be 'Delete a data stream or data streams matching a pattern', got %s", cmd.Short)
 	}
 
-	// Check aliases
+	// Check aliases include short alias
 	aliases := cmd.Aliases
-	if len(aliases) != 1 || aliases[0] != "ds" {
-		t.Errorf("Expected aliases to be ['ds'], got %v", aliases)
+	hasDS := false
+	for _, a := range aliases {
+		if a == "ds" {
+			hasDS = true
+			break
+		}
+	}
+	if !hasDS {
+		t.Errorf("Expected aliases to include 'ds', got %v", aliases)
 	}
 
 	// Check args requirement

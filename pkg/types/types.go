@@ -105,3 +105,10 @@ type ComponentTemplate struct {
 	Version  int                    `json:"version,omitempty"`
 	Meta     map[string]interface{} `json:"_meta,omitempty"`
 }
+
+type LifecyclePolicy struct {
+	Name         string                 `json:"name"`
+	Policy       map[string]interface{} `json:"policy"`
+	Version      int                    `json:"version,omitempty"`
+	ModifiedDate string                 `json:"modified_date,omitempty"`
+}

@@ -12,6 +12,11 @@ func NewDescribeCmd() *cobra.Command {
 	}
 
 	cmd.AddCommand(NewDescribeIndexCmd())
+	cmd.AddCommand(NewDescribeLifecyclePolicyCmd())
+	cmd.AddCommand(NewDescribeIndexTemplateCmd())
+	cmd.AddCommand(NewDescribeComponentTemplateCmd())
+	cmd.AddCommand(NewDescribeDataStreamCmd())
+	cmd.AddCommand(NewDescribeNodeCmd())
 
 	return cmd
 }

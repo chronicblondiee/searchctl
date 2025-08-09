@@ -64,7 +64,7 @@ func NewDeleteIndexCmd() *cobra.Command {
 		Use:     "index INDEX_NAME_OR_PATTERN",
 		Short:   "Delete an index or indices matching a pattern",
 		Long:    "Delete an index or indices matching a pattern from the search cluster. Supports wildcards like 'logs-*'.",
-		Aliases: []string{"idx"},
+		Aliases: []string{"index", "idx"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			indexPattern := args[0]

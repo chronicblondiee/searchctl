@@ -45,7 +45,7 @@ func NewDeleteDataStreamCmd() *cobra.Command {
 		Use:     "datastream DATA_STREAM_NAME_OR_PATTERN",
 		Short:   "Delete a data stream or data streams matching a pattern",
 		Long:    "Delete a data stream or data streams matching a pattern and all their backing indices from the search cluster. Supports wildcards like 'logs-*'.",
-		Aliases: []string{"ds"},
+		Aliases: []string{"datastream", "datastreams", "ds"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			dataStreamPattern := args[0]

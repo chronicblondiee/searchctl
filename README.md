@@ -26,6 +26,9 @@ searchctl get idx-templates                     # Same as above (alias)
 searchctl get component-templates               # List component templates  
 searchctl get ct                                # Same as above (short alias)
 searchctl get component-templates base-* -o yaml # List matching component templates
+searchctl get lifecycle-policies                # List lifecycle policies (ILM/ISM)
+searchctl get ilm                               # Same as above (short alias)
+searchctl get lp                                # Same as above (shortest alias)
 
 # Create resources  
 searchctl create index my-logs                  # Create new index
@@ -40,6 +43,9 @@ searchctl delete index-template old-template    # Delete index template
 searchctl delete template old-template          # Same as above (alias)
 searchctl delete component-template old-ct -y   # Delete component template (auto-confirm)  
 searchctl delete ct old-ct -y                   # Same as above (short alias)
+searchctl delete lifecycle-policy old-policy    # Delete lifecycle policy (ILM/ISM)
+searchctl delete ilm old-policy -y              # Same as above (auto-confirm)
+searchctl delete lp old-policy -y               # Same as above (shortest alias)
 
 # Describe resources
 searchctl describe index my-logs-2024.01        # Show detailed index info
@@ -75,6 +81,7 @@ searchctl config view -o yaml                   # Config as YAML
 # Apply configurations
 searchctl apply -f template.yaml               # Apply index template from file
 searchctl apply -f component-template.yaml     # Apply component template from file
+searchctl apply -f lifecycle-policy.yaml       # Apply lifecycle policy from file
 searchctl apply -f config.json --dry-run       # Preview apply
 
 # Version info
@@ -93,6 +100,10 @@ searchctl version -o json                      # Version as JSON
 **Component Templates:**
 - `searchctl get ct` - List component templates  
 - `searchctl delete ct <name>` - Delete component template
+
+**Lifecycle Policies:**
+- `searchctl get ilm` or `searchctl get lp` - List lifecycle policies
+- `searchctl delete ilm <name>` or `searchctl delete lp <name>` - Delete lifecycle policy
 
 ## Configuration
 
@@ -120,9 +131,23 @@ searchctl delete component-template base-settings -y
 searchctl delete ct base-settings -y               # Short alias
 ```
 
+**Lifecycle Policy Management** - Automated index lifecycle management:
+```bash
+# Apply lifecycle policies  
+searchctl apply -f examples/lifecycle-policies/basic-ilm-policy.yaml         # Elasticsearch ILM
+searchctl apply -f examples/lifecycle-policies/basic-ism-policy.yaml         # OpenSearch ISM
+
+# Manage lifecycle policies
+searchctl get lifecycle-policies
+searchctl get ilm my-policy -o yaml                    # Short alias
+searchctl delete lifecycle-policy my-policy -y
+searchctl delete lp my-policy -y                       # Shortest alias
+```
+
 **Engine Compatibility:**
-- Elasticsearch: Supports `flattened` field types and all ES-specific features
-- OpenSearch: Uses `object` fields with `enabled: false` for dynamic data storage
+- **Elasticsearch**: Uses Index Lifecycle Management (ILM) with `/ilm/policy` endpoints
+- **OpenSearch**: Uses Index State Management (ISM) with `/_plugins/_ism/policies` endpoints  
+- **Component Templates**: Elasticsearch supports `flattened` field types; OpenSearch uses `object` fields with `enabled: false`
 
 Context-based cluster management in `~/.searchctl/config.yaml`:
 
@@ -163,6 +188,7 @@ The `examples/` directory contains ready-to-use templates:
 
 - **Index Templates**: `index-template.yaml`, `datastream-template.yaml`, etc.
 - **Component Templates**: `component-templates/base-settings.yaml`, `observability-mappings*.yaml`
+- **Lifecycle Policies**: `lifecycle-policies/basic-ilm-policy.yaml`, `hot-warm-cold-policy.yaml`, etc.
 - **Configuration**: Sample cluster configurations for different environments
 
 Example workflow:
@@ -171,19 +197,24 @@ Example workflow:
 searchctl apply -f examples/component-templates/base-settings.yaml
 searchctl apply -f examples/component-templates/observability-mappings.yaml
 
+# Apply lifecycle policies for index management
+searchctl apply -f examples/lifecycle-policies/basic-ilm-policy.yaml
+
 # Apply composable index template that uses component templates
 searchctl apply -f examples/component-templates/composable-datastream-template.yaml
 
 # List templates using aliases
 searchctl get idx-templates                     # List all index templates
 searchctl get ct                                # List all component templates
+searchctl get lp                                # List all lifecycle policies
 
 # Create data stream using the template
 searchctl create datastream observability-logs
 
 # Clean up using aliases
 searchctl delete template my-template -y        # Delete index template
-searchctl delete ct base-settings -y            # Delete component template
+searchctl delete ct base-settings -y            # Delete component template  
+searchctl delete lp basic-log-rotation -y       # Delete lifecycle policy
 ```
 
 ## Documentation
@@ -192,3 +223,4 @@ searchctl delete ct base-settings -y            # Delete component template
 - [Configuration](docs/configuration.md) - Advanced setup options  
 - [Test Scripts](scripts/README.md) - Development testing guide
 - [Component Templates](examples/component-templates/README.md) - Template examples and compatibility guide
+- [Lifecycle Policies](examples/lifecycle-policies/README.md) - ILM and ISM policy examples

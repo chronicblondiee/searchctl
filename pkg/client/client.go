@@ -14,6 +14,7 @@ type SearchClient interface {
 	GetNodes() ([]types.Node, error)
 	GetNode(nodeID string) (*types.Node, error)
 	GetDataStreams(pattern string) ([]types.DataStream, error)
+	GetDataStream(name string) (*types.DataStream, error)
 	CreateDataStream(name string) error
 	DeleteDataStream(name string) error
 	RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*types.RolloverResponse, error)
@@ -25,6 +26,10 @@ type SearchClient interface {
 	GetComponentTemplate(name string) (*types.ComponentTemplate, error)
 	CreateComponentTemplate(name string, body map[string]interface{}) error
 	DeleteComponentTemplate(name string) error
+	GetLifecyclePolicies(pattern string) ([]types.LifecyclePolicy, error)
+	GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error)
+	CreateLifecyclePolicy(name string, body map[string]interface{}) error
+	DeleteLifecyclePolicy(name string) error
 }
 
 type Client struct {
@@ -78,6 +83,10 @@ func (c *Client) GetDataStreams(pattern string) ([]types.DataStream, error) {
 	return c.clientset.DataStreams().List(pattern)
 }
 
+func (c *Client) GetDataStream(name string) (*types.DataStream, error) {
+	return c.clientset.DataStreams().Get(name)
+}
+
 func (c *Client) CreateDataStream(name string) error {
 	return c.clientset.DataStreams().Create(name)
 }
@@ -120,4 +129,20 @@ func (c *Client) CreateComponentTemplate(name string, body map[string]interface{
 
 func (c *Client) DeleteComponentTemplate(name string) error {
 	return c.clientset.Indices().ComponentTemplates().Delete(name)
+}
+
+func (c *Client) GetLifecyclePolicies(pattern string) ([]types.LifecyclePolicy, error) {
+	return c.clientset.Indices().LifecyclePolicies().List(pattern)
+}
+
+func (c *Client) GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error) {
+	return c.clientset.Indices().LifecyclePolicies().Get(name)
+}
+
+func (c *Client) CreateLifecyclePolicy(name string, body map[string]interface{}) error {
+	return c.clientset.Indices().LifecyclePolicies().Create(name, body)
+}
+
+func (c *Client) DeleteLifecyclePolicy(name string) error {
+	return c.clientset.Indices().LifecyclePolicies().Delete(name)
 }

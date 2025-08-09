@@ -9,6 +9,7 @@ type Interface interface {
 	Delete(name string) error
 	Templates() TemplatesInterface
 	ComponentTemplates() ComponentTemplatesInterface
+	LifecyclePolicies() LifecyclePoliciesInterface
 }
 
 type TemplatesInterface interface {
@@ -21,6 +22,13 @@ type TemplatesInterface interface {
 type ComponentTemplatesInterface interface {
 	List(pattern string) ([]types.ComponentTemplate, error)
 	Get(name string) (*types.ComponentTemplate, error)
+	Create(name string, body map[string]interface{}) error
+	Delete(name string) error
+}
+
+type LifecyclePoliciesInterface interface {
+	List(pattern string) ([]types.LifecyclePolicy, error)
+	Get(name string) (*types.LifecyclePolicy, error)
 	Create(name string, body map[string]interface{}) error
 	Delete(name string) error
 }

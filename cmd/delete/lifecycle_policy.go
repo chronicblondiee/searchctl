@@ -11,31 +11,31 @@ import (
 	"github.com/spf13/viper"
 )
 
-func NewDeleteComponentTemplateCmd() *cobra.Command {
+func NewDeleteLifecyclePolicyCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:     "component-template TEMPLATE_NAME",
-		Short:   "Delete a component template",
-		Long:    "Delete a component template from the search cluster.",
-		Aliases: []string{"componenttemplates", "component-template", "componenttemplate", "ct", "comp-templates", "comp-template"},
+		Use:     "lifecycle-policy POLICY_NAME",
+		Short:   "Delete a lifecycle policy",
+		Long:    "Delete a lifecycle policy from the search cluster (ILM for Elasticsearch, ISM for OpenSearch).",
+		Aliases: []string{"lifecyclepolicy", "lifecycle-policies", "lifecyclepolicies", "ilm", "ism", "lp", "lifecycle"},
 		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
-			templateName := args[0]
+			policyName := args[0]
 
 			if viper.GetBool("dry-run") {
-				cmd.Printf("Would delete component template: %s\n", templateName)
+				cmd.Printf("Would delete lifecycle policy: %s\n", policyName)
 				return
 			}
 
 			// Check for confirmation flag
 			if yes, _ := cmd.Flags().GetBool("yes"); !yes {
-				fmt.Printf("Are you sure you want to delete component template '%s'? (y/N): ", templateName)
+				fmt.Printf("Are you sure you want to delete lifecycle policy '%s'? (y/N): ", policyName)
 				reader := bufio.NewReader(os.Stdin)
 				response, err := reader.ReadString('\n')
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
 					os.Exit(1)
 				}
-
+				
 				response = strings.TrimSpace(strings.ToLower(response))
 				if response != "y" && response != "yes" {
 					fmt.Println("Operation cancelled")
@@ -49,16 +49,16 @@ func NewDeleteComponentTemplateCmd() *cobra.Command {
 				os.Exit(1)
 			}
 
-			if err := c.DeleteComponentTemplate(templateName); err != nil {
-				fmt.Fprintf(os.Stderr, "Error deleting component template: %v\n", err)
+			if err := c.DeleteLifecyclePolicy(policyName); err != nil {
+				fmt.Fprintf(os.Stderr, "Error deleting lifecycle policy: %v\n", err)
 				os.Exit(1)
 			}
 
-			cmd.Printf("Component template %s deleted successfully\n", templateName)
+			cmd.Printf("Lifecycle policy %s deleted successfully\n", policyName)
 		},
 	}
 
 	cmd.Flags().BoolP("yes", "y", false, "automatically confirm deletion without prompting")
-
+	
 	return cmd
 }
