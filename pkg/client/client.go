@@ -25,6 +25,10 @@ type SearchClient interface {
 	GetComponentTemplate(name string) (*types.ComponentTemplate, error)
 	CreateComponentTemplate(name string, body map[string]interface{}) error
 	DeleteComponentTemplate(name string) error
+	GetLifecyclePolicies(pattern string) ([]types.LifecyclePolicy, error)
+	GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error)
+	CreateLifecyclePolicy(name string, body map[string]interface{}) error
+	DeleteLifecyclePolicy(name string) error
 }
 
 type Client struct {
@@ -120,4 +124,20 @@ func (c *Client) CreateComponentTemplate(name string, body map[string]interface{
 
 func (c *Client) DeleteComponentTemplate(name string) error {
 	return c.clientset.Indices().ComponentTemplates().Delete(name)
+}
+
+func (c *Client) GetLifecyclePolicies(pattern string) ([]types.LifecyclePolicy, error) {
+	return c.clientset.Indices().LifecyclePolicies().List(pattern)
+}
+
+func (c *Client) GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error) {
+	return c.clientset.Indices().LifecyclePolicies().Get(name)
+}
+
+func (c *Client) CreateLifecyclePolicy(name string, body map[string]interface{}) error {
+	return c.clientset.Indices().LifecyclePolicies().Create(name, body)
+}
+
+func (c *Client) DeleteLifecyclePolicy(name string) error {
+	return c.clientset.Indices().LifecyclePolicies().Delete(name)
 }

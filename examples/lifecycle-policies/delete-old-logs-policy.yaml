@@ -1,0 +1,17 @@
+kind: LifecyclePolicy
+metadata:
+  name: delete-old-logs
+spec:
+  policy:
+    phases:
+      hot:
+        actions:
+          rollover:
+            max_size: "5gb"
+            max_age: "1d"
+          set_priority:
+            priority: 100
+      delete:
+        min_age: "30d"
+        actions:
+          delete: {}

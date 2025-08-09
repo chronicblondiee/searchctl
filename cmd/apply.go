@@ -78,6 +78,8 @@ func applyConfigurationFromFile(c client.SearchClient, filename string) error {
 		return applyIndexTemplate(c, resource)
 	case "ComponentTemplate":
 		return applyComponentTemplate(c, resource)
+	case "LifecyclePolicy":
+		return applyLifecyclePolicy(c, resource)
 	default:
 		return fmt.Errorf("unsupported resource kind: %s", kind)
 	}
@@ -165,6 +167,48 @@ func applyComponentTemplate(c client.SearchClient, resource map[string]interface
 	}
 
 	return c.CreateComponentTemplate(name, spec)
+}
+
+func applyLifecyclePolicy(c client.SearchClient, resource map[string]interface{}) error {
+	// Handle both string and interface{} keys in metadata
+	var metadata map[string]interface{}
+	if meta, ok := resource["metadata"].(map[interface{}]interface{}); ok {
+		metadata = make(map[string]interface{})
+		for k, v := range meta {
+			if key, ok := k.(string); ok {
+				metadata[key] = v
+			}
+		}
+	} else if meta, ok := resource["metadata"].(map[string]interface{}); ok {
+		metadata = meta
+	} else {
+		return fmt.Errorf("metadata section missing or invalid")
+	}
+
+	name, ok := metadata["name"].(string)
+	if !ok {
+		return fmt.Errorf("lifecycle policy name missing or invalid")
+	}
+
+	// Handle both string and interface{} keys in spec
+	var spec map[string]interface{}
+	if s, ok := resource["spec"].(map[interface{}]interface{}); ok {
+		spec = make(map[string]interface{})
+		for k, v := range s {
+			if key, ok := k.(string); ok {
+				spec[key] = convertInterfaceKeys(v)
+			}
+		}
+	} else if s, ok := resource["spec"].(map[string]interface{}); ok {
+		spec = make(map[string]interface{})
+		for k, v := range s {
+			spec[k] = convertInterfaceKeys(v)
+		}
+	} else {
+		return fmt.Errorf("spec section missing or invalid")
+	}
+
+	return c.CreateLifecyclePolicy(name, spec)
 }
 
 // Convert interface{} keys to string keys recursively
