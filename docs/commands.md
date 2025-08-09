@@ -302,7 +302,7 @@ searchctl rollover datastream DATA_STREAM_NAME [flags]
 - `--max-primary-shard-size` - Maximum primary shard size before rollover (e.g., 50gb)
 - `--max-primary-shard-docs` - Maximum number of documents in primary shard before rollover
 - `--lazy` - Only mark data stream for rollover at next write (data streams only)
-- `-f, --conditions-file` - JSON file containing rollover conditions
+- `-f, --conditions-file` - file containing rollover conditions (JSON or YAML)
 
 **Examples:**
 ```bash
@@ -318,8 +318,9 @@ searchctl rollover datastream logs-metrics --max-primary-shard-docs 500000
 # Lazy rollover (mark for rollover at next write)
 searchctl rollover datastream logs-system --lazy --max-age 1d
 
-# Rollover using conditions file
-searchctl rollover datastream logs-system -f rollover-conditions.json
+# Rollover using conditions file (JSON or YAML)
+searchctl rollover datastream logs-system -f examples/rollover-conditions.json
+searchctl rollover datastream logs-system -f examples/rollover-conditions.yaml
 
 # Dry run rollover
 searchctl rollover datastream logs-test --dry-run --max-age 1d

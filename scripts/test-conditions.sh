@@ -51,9 +51,18 @@ test_conditions_file() {
   "max_docs": 1000000
 }
 EOF
+
+    # Also create a YAML variant for testing
+    cat > "$TEST_DIR/basic-conditions.yaml" << 'EOF'
+max_age: 7d
+max_docs: 1000000
+EOF
     
-    echo "Testing basic conditions file..."
+    echo "Testing basic conditions file (JSON)..."
     ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.json"
+
+    echo "Testing basic conditions file (YAML)..."
+    ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.yaml"
     
     # Test 2: Advanced conditions file
     if [[ "$context" == "elasticsearch" ]]; then
@@ -157,21 +166,21 @@ test_output_formats() {
     log_info "Testing output formats with conditions files for $context..."
     
     if [[ "$context" == "elasticsearch" ]]; then
-        echo "JSON output:"
-        ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.json -o json
-        
-        echo "YAML output:"
-        ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.json -o yaml
-        
-        echo "Table output (default):"
-        ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.json
+    echo "JSON output:"
+    ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.json -o json
+
+    echo "YAML output:"
+    ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.yaml -o yaml
+
+    echo "Table output (default, YAML file):"
+    ./bin/searchctl --context $context rollover datastream test-logs -f examples/rollover-conditions.yaml
     else
         # For OpenSearch, use a basic conditions file without primary shard conditions
         echo "JSON output:"
         ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.json" -o json
         
         echo "YAML output:"
-        ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.json" -o yaml
+        ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.yaml" -o yaml
         
         echo "Table output (default):"
         ./bin/searchctl --context $context rollover datastream test-logs -f "$TEST_DIR/basic-conditions.json"
