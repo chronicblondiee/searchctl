@@ -14,6 +14,7 @@ type SearchClient interface {
 	GetNodes() ([]types.Node, error)
 	GetNode(nodeID string) (*types.Node, error)
 	GetDataStreams(pattern string) ([]types.DataStream, error)
+	GetDataStream(name string) (*types.DataStream, error)
 	CreateDataStream(name string) error
 	DeleteDataStream(name string) error
 	RolloverDataStream(name string, conditions map[string]interface{}, lazy bool) (*types.RolloverResponse, error)
@@ -80,6 +81,10 @@ func (c *Client) GetNode(nodeID string) (*types.Node, error) {
 
 func (c *Client) GetDataStreams(pattern string) ([]types.DataStream, error) {
 	return c.clientset.DataStreams().List(pattern)
+}
+
+func (c *Client) GetDataStream(name string) (*types.DataStream, error) {
+	return c.clientset.DataStreams().Get(name)
 }
 
 func (c *Client) CreateDataStream(name string) error {

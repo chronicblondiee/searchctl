@@ -45,6 +45,21 @@ func (c *client) List(pattern string) ([]types.DataStream, error) {
 	return response.DataStreams, nil
 }
 
+func (c *client) Get(name string) (*types.DataStream, error) {
+	streams, err := c.List(name)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, ds := range streams {
+		if ds.Name == name {
+			return &ds, nil
+		}
+	}
+
+	return nil, fmt.Errorf("data stream %q not found", name)
+}
+
 func (c *client) Create(name string) error {
 	path := fmt.Sprintf("/_data_stream/%s", name)
 	resp, err := c.restClient.Put(path, nil)

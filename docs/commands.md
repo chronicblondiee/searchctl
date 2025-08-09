@@ -90,6 +90,84 @@ searchctl describe index my-logs-index
 searchctl describe index my-index -o yaml
 ```
 
+#### describe lifecycle-policy
+```bash
+searchctl describe lifecycle-policy POLICY_NAME [flags]
+```
+
+**Aliases:** `lifecyclepolicy`, `ilm`, `ism`, `lp`, `lifecycle`
+
+**Flags:**
+- `--show-body` - Include full policy body when using table output
+
+**Examples:**
+```bash
+# Describe lifecycle policy (table)
+searchctl describe lifecycle-policy basic-log-rotation
+
+# As YAML (full object)
+searchctl describe lifecycle-policy basic-log-rotation -o yaml
+```
+
+#### describe index-template
+```bash
+searchctl describe index-template TEMPLATE_NAME [flags]
+```
+
+**Aliases:** `indextemplate`, `template`, `it`, `idx-template`
+
+**Flags:**
+- `--show-body` - Include full template body when using table output
+
+**Examples:**
+```bash
+# Describe index template
+searchctl describe index-template logs-template
+
+# As JSON (full object)
+searchctl describe index-template logs-template -o json
+```
+
+#### describe component-template
+```bash
+searchctl describe component-template NAME [flags]
+```
+
+**Aliases:** `componenttemplate`, `ct`
+
+**Flags:**
+- `--show-body` - Include full template body when using table output
+
+**Examples:**
+```bash
+searchctl describe component-template base-settings
+```
+
+#### describe datastream
+```bash
+searchctl describe datastream NAME [flags]
+```
+
+**Aliases:** `datastreams`, `ds`
+
+**Examples:**
+```bash
+searchctl describe datastream logs-nginx
+searchctl describe datastream logs-nginx -o yaml
+```
+
+#### describe node
+```bash
+searchctl describe node NODE_ID [flags]
+```
+
+**Aliases:** `no`
+
+**Examples:**
+```bash
+searchctl describe node node-1
+```
+
 ### create
 
 Create new resources in the cluster.
