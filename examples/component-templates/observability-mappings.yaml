@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ComponentTemplate
+metadata:
+  name: observability-mappings
+spec:
+  template:
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+          format: "strict_date_optional_time||epoch_millis"
+        service:
+          properties:
+            name:
+              type: keyword
+            version:
+              type: keyword
+            environment:
+              type: keyword
+        host:
+          properties:
+            name:
+              type: keyword
+            ip:
+              type: ip
+            hostname:
+              type: keyword
+        labels:
+          type: flattened
+        tags:
+          type: keyword
+        ecs:
+          properties:
+            version:
+              type: keyword
+  _meta:
+    description: "Common observability fields mapping"
+    version: 1

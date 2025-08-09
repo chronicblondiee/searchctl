@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: IndexTemplate
+metadata:
+  name: test-datastream-template
+spec:
+  index_patterns:
+  - "test-*"
+  priority: 100
+  data_stream: {}
+  template:
+    settings:
+      number_of_shards: 1
+      number_of_replicas: 0
+    mappings:
+      properties:
+        "@timestamp":
+          type: date
+          format: "strict_date_optional_time||epoch_millis"
+        message:
+          type: text
+        level:
+          type: keyword
+        host:
+          type: keyword
+  _meta:
+    description: "Simple template for testing data streams"
+    version: 1

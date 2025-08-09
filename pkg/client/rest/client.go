@@ -48,12 +48,20 @@ func (c *Client) Do(req *Request) (*Response, error) {
 	url := c.baseURL + req.Path
 
 	var reqBody io.Reader
+	var hasBody bool
 	if req.Body != nil {
-		bodyBytes, err := json.Marshal(req.Body)
-		if err != nil {
-			return nil, err
+		// Check if it's a nil map (which would marshal to "null")
+		if m, ok := req.Body.(map[string]interface{}); ok && m == nil {
+			// Don't send anything for nil maps
+			hasBody = false
+		} else {
+			bodyBytes, err := json.Marshal(req.Body)
+			if err != nil {
+				return nil, err
+			}
+			reqBody = bytes.NewBuffer(bodyBytes)
+			hasBody = true
 		}
-		reqBody = bytes.NewBuffer(bodyBytes)
 	}
 
 	httpReq, err := http.NewRequest(req.Method, url, reqBody)
@@ -61,7 +69,10 @@ func (c *Client) Do(req *Request) (*Response, error) {
 		return nil, err
 	}
 
-	httpReq.Header.Set("Content-Type", "application/json")
+	// Only set Content-Type when there's actually a body to send
+	if hasBody {
+		httpReq.Header.Set("Content-Type", "application/json")
+	}
 
 	if c.apiKey != "" {
 		httpReq.Header.Set("Authorization", "ApiKey "+c.apiKey)
