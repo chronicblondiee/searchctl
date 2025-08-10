@@ -17,6 +17,7 @@ func NewGetCmd() *cobra.Command {
 	cmd.AddCommand(NewGetIndexTemplatesCmd())
 	cmd.AddCommand(NewGetComponentTemplatesCmd())
 	cmd.AddCommand(NewGetLifecyclePoliciesCmd())
+	cmd.AddCommand(NewGetShardsCmd())
 
 	return cmd
 }

@@ -1,4 +1,4 @@
-.PHONY: build test test-unit test-integration test-all test-conditions test-config test-delete-confirmation test-lifecycle-policies start-test-env stop-test-env install clean release dev-deps
+.PHONY: build test test-unit test-integration test-all test-conditions test-config test-delete-confirmation test-lifecycle-policies test-shard-allocation start-test-env stop-test-env install clean release dev-deps
 
 # Variables
 BINARY_NAME=searchctl
@@ -37,7 +37,11 @@ test-lifecycle-policies:
 	@echo "Running lifecycle policies tests..."
 	./scripts/test-lifecycle-policies.sh
 
-test-all: test-unit test-integration test-conditions test-config test-delete-confirmation test-lifecycle-policies
+test-shard-allocation:
+	@echo "Running shard allocation tests..."
+	./scripts/test-shard-allocation.sh
+
+test-all: test-unit test-integration test-conditions test-config test-delete-confirmation test-lifecycle-policies test-shard-allocation
 	@echo "All tests completed!"
 
 start-test-env:

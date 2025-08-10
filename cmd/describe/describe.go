@@ -17,6 +17,7 @@ func NewDescribeCmd() *cobra.Command {
 	cmd.AddCommand(NewDescribeComponentTemplateCmd())
 	cmd.AddCommand(NewDescribeDataStreamCmd())
 	cmd.AddCommand(NewDescribeNodeCmd())
+	cmd.AddCommand(NewDescribeAllocationCmd())
 
 	return cmd
 }

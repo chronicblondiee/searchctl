@@ -45,6 +45,7 @@ make test-all                      # Full test suite
 | `test-delete-confirmation.sh` | Delete confirmation features | ✅ Safe (with -y) | ~20s | Feature testing |
 | `test-rollover-real.sh` | Real rollover operations | ⚠️ Creates data | ~2m | Pre-release testing |
 | `test-conditions.sh` | Conditions file validation | ✅ Safe (dry-run) | ~30s | Config testing |
+| `test-shard-allocation.sh` | Shard allocation (cat shards, explain, settings) | ✅ Safe | ~20s | Feature testing |
 | `test-config.sh` | Configuration testing | ✅ Safe (read-only) | ~10s | Config validation |
 | `start-test-env.sh` | Environment setup | ✅ Safe | ~30s | Setup |
 | `stop-test-env.sh` | Environment cleanup | ✅ Safe | ~10s | Cleanup |
