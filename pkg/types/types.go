@@ -21,6 +21,57 @@ type ClusterInfo struct {
 	Tagline     string                 `json:"tagline"`
 }
 
+// CatShardRow represents a row from _cat/shards
+type CatShardRow struct {
+	Index            string `json:"index"`
+	Shard            string `json:"shard"`
+	PrimaryOrReplica string `json:"prirep"`
+	State            string `json:"state"`
+	Docs             string `json:"docs"`
+	Store            string `json:"store"`
+	IP               string `json:"ip"`
+	Node             string `json:"node"`
+	UnassignedReason string `json:"unassigned.reason,omitempty"`
+}
+
+// AllocationExplainRequest describes a shard to explain
+type AllocationExplainRequest struct {
+	Index   string `json:"index,omitempty"`
+	Shard   int    `json:"shard,omitempty"`
+	Primary bool   `json:"primary,omitempty"`
+}
+
+// AllocationExplainResponse is a simplified view of explain output
+type AllocationExplainResponse struct {
+	Index               string                   `json:"index"`
+	Shard               int                      `json:"shard"`
+	Primary             bool                     `json:"primary"`
+	CurrentNode         map[string]interface{}   `json:"current_node,omitempty"`
+	NodeExplanations    []map[string]interface{} `json:"node_explanations,omitempty"`
+	CanAllocate         string                   `json:"can_allocate"`
+	AllocateExplanation string                   `json:"allocate_explanation,omitempty"`
+	UnassignedInfo      map[string]interface{}   `json:"unassigned_info,omitempty"`
+}
+
+// RerouteCommand supports multiple command forms
+type RerouteCommand map[string]map[string]interface{}
+
+type RerouteOptions struct {
+	DryRun      bool
+	Explain     bool
+	RetryFailed bool
+}
+
+type RerouteResponse struct {
+	State        map[string]interface{}   `json:"state,omitempty"`
+	Explanations []map[string]interface{} `json:"explanations,omitempty"`
+}
+
+type ClusterSettings struct {
+	Persistent map[string]interface{} `json:"persistent"`
+	Transient  map[string]interface{} `json:"transient"`
+}
+
 type Index struct {
 	Name             string `json:"index"`
 	Health           string `json:"health"`

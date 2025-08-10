@@ -30,6 +30,13 @@ type SearchClient interface {
 	GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error)
 	CreateLifecyclePolicy(name string, body map[string]interface{}) error
 	DeleteLifecyclePolicy(name string) error
+
+	// Shards & allocation
+	GetShards(pattern string) ([]types.CatShardRow, error)
+	ExplainAllocation(req types.AllocationExplainRequest, includeYes, includeDisk bool) (*types.AllocationExplainResponse, error)
+	Reroute(commands []types.RerouteCommand, opts types.RerouteOptions) (*types.RerouteResponse, error)
+	GetClusterSettings() (*types.ClusterSettings, error)
+	UpdateClusterSettings(body map[string]interface{}) error
 }
 
 type Client struct {
@@ -145,4 +152,24 @@ func (c *Client) CreateLifecyclePolicy(name string, body map[string]interface{})
 
 func (c *Client) DeleteLifecyclePolicy(name string) error {
 	return c.clientset.Indices().LifecyclePolicies().Delete(name)
+}
+
+func (c *Client) GetShards(pattern string) ([]types.CatShardRow, error) {
+	return c.clientset.Cluster().CatShards(pattern)
+}
+
+func (c *Client) ExplainAllocation(req types.AllocationExplainRequest, includeYes, includeDisk bool) (*types.AllocationExplainResponse, error) {
+	return c.clientset.Cluster().ExplainAllocation(req, includeYes, includeDisk)
+}
+
+func (c *Client) Reroute(commands []types.RerouteCommand, opts types.RerouteOptions) (*types.RerouteResponse, error) {
+	return c.clientset.Cluster().Reroute(commands, opts)
+}
+
+func (c *Client) GetClusterSettings() (*types.ClusterSettings, error) {
+	return c.clientset.Cluster().GetSettings()
+}
+
+func (c *Client) UpdateClusterSettings(body map[string]interface{}) error {
+	return c.clientset.Cluster().UpdateSettings(body)
 }

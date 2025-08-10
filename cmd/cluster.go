@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	cluster "github.com/chronicblondiee/searchctl/cmd/cluster"
 	"github.com/chronicblondiee/searchctl/pkg/client"
 	"github.com/chronicblondiee/searchctl/pkg/output"
 	"github.com/spf13/cobra"
@@ -19,6 +20,7 @@ func NewClusterCmd() *cobra.Command {
 
 	cmd.AddCommand(NewClusterHealthCmd())
 	cmd.AddCommand(NewClusterInfoCmd())
+	cmd.AddCommand(cluster.NewAllocationSettingsCmd())
 
 	return cmd
 }
