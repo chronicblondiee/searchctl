@@ -21,9 +21,9 @@ for context in elasticsearch opensearch; do
     
     # Cleanup any leftover test resources first
     ./bin/searchctl --context $context delete datastream test-logs -y >/dev/null 2>&1 || true
-    ./bin/searchctl --context $context delete datastream logs-test -y >/dev/null 2>&1 || true
+    ./bin/searchctl --context $context delete datastream itest-logs -y >/dev/null 2>&1 || true
     curl -s -X DELETE "localhost:$port/_index_template/test-logs-template" >/dev/null 2>&1 || true
-    curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
+    curl -s -X DELETE "localhost:$port/_index_template/itest-logs-template" >/dev/null 2>&1 || true
     
     # Basic cluster operations
     test_command "./bin/searchctl --context $context cluster health" true
@@ -81,12 +81,12 @@ for context in elasticsearch opensearch; do
     curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
     
     # Create index template for rollover testing with higher priority to avoid conflicts
-    echo "Creating index template for logs-test..."
-    curl -s -X PUT "localhost:$port/_index_template/logs-test-template" \
+    echo "Creating index template for itest-logs..."
+    curl -s -X PUT "localhost:$port/_index_template/itest-logs-template" \
         -H "Content-Type: application/json" \
         -d '{
-            "index_patterns": ["logs-test*"],
-            "priority": 200,
+            "index_patterns": ["itest-logs*"],
+            "priority": 250,
             "data_stream": {},
             "template": {
                 "settings": {
@@ -95,7 +95,7 @@ for context in elasticsearch opensearch; do
                 }
             }
         }' || {
-            echo "Failed to create index template for logs-test"
+            echo "Failed to create index template for itest-logs"
             exit 1
         }
     
@@ -103,35 +103,35 @@ for context in elasticsearch opensearch; do
     sleep 2
     
     # Verify template exists
-    rollover_template_response=$(curl -s "localhost:$port/_index_template/logs-test-template")
+    rollover_template_response=$(curl -s "localhost:$port/_index_template/itest-logs-template")
     if [[ "$rollover_template_response" == *"index_template"* ]]; then
-        echo "Template logs-test-template created successfully"
+        echo "Template itest-logs-template created successfully"
     else
         echo "Rollover template verification failed: $rollover_template_response"
         exit 1
     fi
     
     # Create test datastream for rollover testing
-    test_command "./bin/searchctl --context $context create datastream logs-test" true
-    test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 7d --max-docs 1000" true
+    test_command "./bin/searchctl --context $context create datastream itest-logs" true
+    test_command "./bin/searchctl --context $context rollover datastream itest-logs --max-age 7d --max-docs 1000" true
     
     # Test different conditions based on engine capabilities
     if [ "$context" = "elasticsearch" ]; then
-        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-primary-shard-docs 500000" true
-        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 30d --max-docs 1000000 --max-primary-shard-docs 500000 --max-primary-shard-size 50gb --max-size 50gb" true
-        test_command "./bin/searchctl --context $context rollover datastream logs-test --lazy" true
+        test_command "./bin/searchctl --context $context rollover datastream itest-logs --max-primary-shard-docs 500000" true
+        test_command "./bin/searchctl --context $context rollover datastream itest-logs --max-age 30d --max-docs 1000000 --max-primary-shard-docs 500000 --max-primary-shard-size 50gb --max-size 50gb" true
+        test_command "./bin/searchctl --context $context rollover datastream itest-logs --lazy" true
     else
         # OpenSearch doesn't support some ES-specific conditions
-        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-docs 500000" true
-        test_command "./bin/searchctl --context $context rollover datastream logs-test --max-age 30d --max-docs 1000000 --max-size 50gb" true
+        test_command "./bin/searchctl --context $context rollover datastream itest-logs --max-docs 500000" true
+        test_command "./bin/searchctl --context $context rollover datastream itest-logs --max-age 30d --max-docs 1000000 --max-size 50gb" true
     fi
     
     # Test output formats
-    test_command "./bin/searchctl --context $context rollover ds logs-test --max-age 7d" true
+    test_command "./bin/searchctl --context $context rollover ds itest-logs --max-age 7d" true
     
     # Cleanup test datastream and template
-    test_command "./bin/searchctl --context $context delete datastream logs-test -y" true
-    curl -s -X DELETE "localhost:$port/_index_template/logs-test-template" >/dev/null 2>&1 || true
+    test_command "./bin/searchctl --context $context delete datastream itest-logs -y" true
+    curl -s -X DELETE "localhost:$port/_index_template/itest-logs-template" >/dev/null 2>&1 || true
     
     # Test ComponentTemplate operations
     log_test "Testing ComponentTemplate operations..."

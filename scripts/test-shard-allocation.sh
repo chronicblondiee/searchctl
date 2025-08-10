@@ -56,6 +56,7 @@ test_context() {
   test_command "./bin/searchctl --context $context get shards $idx -o yaml" true
 
   log_info "Explaining allocation for primary shard 0"
+  # Ensure shard param is passed; index has 1 primary shard, so shard 0 exists
   test_command "./bin/searchctl --context $context describe allocation --index $idx --shard 0 --primary --include-yes -o json" true
   test_command "./bin/searchctl --context $context describe allocation --index $idx --shard 0 --primary --include-disk -o yaml" true
 

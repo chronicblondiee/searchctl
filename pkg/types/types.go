@@ -37,7 +37,7 @@ type CatShardRow struct {
 // AllocationExplainRequest describes a shard to explain
 type AllocationExplainRequest struct {
 	Index   string `json:"index,omitempty"`
-	Shard   int    `json:"shard,omitempty"`
+	Shard   int    `json:"shard"`
 	Primary bool   `json:"primary,omitempty"`
 }
 
