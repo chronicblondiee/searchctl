@@ -205,3 +205,7 @@ log_success "Integration tests completed successfully!"
 log_info "Additional test scripts available:"
 log_info "  ./scripts/test-rollover-real.sh - Real operations with test data"
 log_info "  ./scripts/test-performance.sh - Performance benchmarking"
+
+# Run shard allocation feature tests (safe)
+echo "Running shard allocation tests..."
+./scripts/test-shard-allocation.sh
