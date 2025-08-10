@@ -29,6 +29,8 @@ searchctl get component-templates base-* -o yaml # List matching component templ
 searchctl get lifecycle-policies                # List lifecycle policies (ILM/ISM)
 searchctl get ilm                               # Same as above (short alias)
 searchctl get lp                                # Same as above (shortest alias)
+searchctl get shards                            # List shard allocations
+searchctl get shards logs-* -o yaml             # Shards for matching indices
 
 # Create resources  
 searchctl create index my-logs                  # Create new index
@@ -56,6 +58,7 @@ searchctl describe index-template logs-template --show-body # Composable templat
 searchctl describe component-template base-settings --show-body
 searchctl describe datastream logs-app -o yaml              # Data stream details
 searchctl describe node node-1 -o yaml                      # Node details
+searchctl describe allocation --index idx --shard 0 --primary -o json # Explain allocation
 ```
 
 ### Data Stream Management
@@ -76,6 +79,13 @@ searchctl rollover datastream logs -f examples/rollover-conditions.yaml  # From 
 searchctl cluster health                        # Show cluster health
 searchctl cluster info                          # Show cluster information
 searchctl cluster health -o json                # Health as JSON
+
+# Allocation settings
+searchctl cluster allocation-settings           # Get current settings
+searchctl cluster allocation-settings -o yaml   # As YAML
+searchctl cluster allocation-settings --enable all            # Enable all allocation
+searchctl cluster allocation-settings --rebalance all         # Enable all rebalancing
+searchctl cluster allocation-settings --awareness-attrs zone  # Set awareness attrs
 ```
 
 ### Configuration Management
