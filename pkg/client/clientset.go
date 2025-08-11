@@ -4,6 +4,7 @@ import (
 	"github.com/chronicblondiee/searchctl/pkg/client/cluster"
 	"github.com/chronicblondiee/searchctl/pkg/client/datastreams"
 	"github.com/chronicblondiee/searchctl/pkg/client/indices"
+	"github.com/chronicblondiee/searchctl/pkg/client/ingest"
 	"github.com/chronicblondiee/searchctl/pkg/client/nodes"
 	"github.com/chronicblondiee/searchctl/pkg/client/rest"
 )
@@ -13,6 +14,7 @@ type Interface interface {
 	Indices() indices.Interface
 	DataStreams() datastreams.Interface
 	Nodes() nodes.Interface
+	Ingest() ingest.Interface
 }
 
 type Clientset struct {
@@ -20,6 +22,7 @@ type Clientset struct {
 	indicesClient     indices.Interface
 	dataStreamsClient datastreams.Interface
 	nodesClient       nodes.Interface
+	ingestClient      ingest.Interface
 }
 
 func NewClientset() (Interface, error) {
@@ -41,6 +44,7 @@ func NewClientset() (Interface, error) {
 		indicesClient:     indices.New(restClient),
 		dataStreamsClient: datastreams.New(restClient),
 		nodesClient:       nodes.New(restClient),
+		ingestClient:      ingest.New(restClient),
 	}, nil
 }
 
@@ -58,4 +62,8 @@ func (c *Clientset) DataStreams() datastreams.Interface {
 
 func (c *Clientset) Nodes() nodes.Interface {
 	return c.nodesClient
+}
+
+func (c *Clientset) Ingest() ingest.Interface {
+	return c.ingestClient
 }

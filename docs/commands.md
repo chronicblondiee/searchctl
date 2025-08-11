@@ -284,6 +284,55 @@ searchctl apply -f index-template.yaml
 searchctl apply -f config.yaml --dry-run
 ```
 
+### clone
+
+Export (clone) and import cluster configuration.
+
+#### clone export
+```bash
+searchctl clone export [flags]
+```
+
+**Flags:**
+- `-d, --dir` - Output directory (required)
+- `--types` - Comma-separated list of resource types to export: `index-templates,component-templates,lifecycle-policies,ingest-pipelines,cluster-settings`
+- `--names` - Optional names/patterns to filter (comma-separated). Empty exports all
+- `--include-system` - Include system resources (names starting with `.`)
+
+**Examples:**
+```bash
+# Export everything as YAML
+searchctl clone export --dir /backup -o yaml
+
+# Export only templates and ILM/ISM as JSON
+searchctl clone export --types index-templates,component-templates,lifecycle-policies --dir /backup -o json
+
+# Export only matching names/patterns
+searchctl clone export --types index-templates --names logs-*,metrics-* --dir /backup -o yaml
+```
+
+#### clone import
+```bash
+searchctl clone import [flags]
+```
+
+Import resources by scanning subdirectories in the given directory. Import order is component-templates → index-templates → lifecycle-policies → ingest-pipelines → cluster-settings.
+
+**Flags:**
+- `-d, --dir` - Input directory (required)
+- `--types` - Comma-separated list of resource types to import
+- `--dry-run` - Show planned operations without applying
+- `--continue-on-error` - Continue processing other files on errors
+
+**Examples:**
+```bash
+# Import everything found in directory
+searchctl clone import --dir /backup
+
+# Dry run import of ILM and pipelines
+searchctl clone import --types lifecycle-policies,ingest-pipelines --dir /backup --dry-run
+```
+
 ### rollover
 
 Rollover data streams to create new backing indices.
