@@ -10,4 +10,9 @@ type Interface interface {
 	Reroute(commands []types.RerouteCommand, opts types.RerouteOptions) (*types.RerouteResponse, error)
 	GetSettings() (*types.ClusterSettings, error)
 	UpdateSettings(body map[string]interface{}) error
+
+	// New operations
+	Stats() (*types.ClusterStats, error)
+	State(metrics []string, indices string, masterTimeout string) (*types.ClusterState, error)
+	PendingTasks() (*types.ClusterPendingTasks, error)
 }

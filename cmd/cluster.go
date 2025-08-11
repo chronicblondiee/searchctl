@@ -20,6 +20,9 @@ func NewClusterCmd() *cobra.Command {
 
 	cmd.AddCommand(NewClusterHealthCmd())
 	cmd.AddCommand(NewClusterInfoCmd())
+	cmd.AddCommand(cluster.NewStatsCmd())
+	cmd.AddCommand(cluster.NewStateCmd())
+	cmd.AddCommand(cluster.NewPendingTasksCmd())
 	cmd.AddCommand(cluster.NewAllocationSettingsCmd())
 
 	return cmd

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/chronicblondiee/searchctl/pkg/client/rest"
 	"github.com/chronicblondiee/searchctl/pkg/types"
@@ -156,4 +157,64 @@ func (c *client) UpdateSettings(body map[string]interface{}) error {
 		return fmt.Errorf("error updating cluster settings: %s", string(resp.Body))
 	}
 	return nil
+}
+
+func (c *client) Stats() (*types.ClusterStats, error) {
+	resp, err := c.restClient.Get("/_cluster/stats")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error getting cluster stats: %s", string(resp.Body))
+	}
+	var out types.ClusterStats
+	if err := json.Unmarshal(resp.Body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *client) State(metrics []string, indices string, masterTimeout string) (*types.ClusterState, error) {
+	v := url.Values{}
+	if indices != "" {
+		v.Set("indices", indices)
+	}
+	if masterTimeout != "" {
+		v.Set("master_timeout", masterTimeout)
+	}
+	// Default to /_cluster/state without metrics to avoid fetching _all by default
+	path := "/_cluster/state"
+	if len(metrics) > 0 {
+		path += "/" + strings.Join(metrics, ",")
+	}
+	if len(v) > 0 {
+		path += "?" + v.Encode()
+	}
+	resp, err := c.restClient.Get(path)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error getting cluster state: %s", string(resp.Body))
+	}
+	var out types.ClusterState
+	if err := json.Unmarshal(resp.Body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (c *client) PendingTasks() (*types.ClusterPendingTasks, error) {
+	resp, err := c.restClient.Get("/_cluster/pending_tasks")
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error getting pending tasks: %s", string(resp.Body))
+	}
+	var out types.ClusterPendingTasks
+	if err := json.Unmarshal(resp.Body, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
 }

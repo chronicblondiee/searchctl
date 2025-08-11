@@ -7,6 +7,9 @@ import (
 type SearchClient interface {
 	ClusterHealth() (*types.ClusterHealth, error)
 	ClusterInfo() (*types.ClusterInfo, error)
+	ClusterStats() (*types.ClusterStats, error)
+	ClusterState(metrics []string, indices, masterTimeout string) (*types.ClusterState, error)
+	ClusterPendingTasks() (*types.ClusterPendingTasks, error)
 	GetIndices(pattern string) ([]types.Index, error)
 	GetIndex(name string) (*types.Index, error)
 	CreateIndex(name string, body map[string]interface{}) error
@@ -60,6 +63,18 @@ func (c *Client) ClusterHealth() (*types.ClusterHealth, error) {
 
 func (c *Client) ClusterInfo() (*types.ClusterInfo, error) {
 	return c.clientset.Cluster().Info()
+}
+
+func (c *Client) ClusterStats() (*types.ClusterStats, error) {
+	return c.clientset.Cluster().Stats()
+}
+
+func (c *Client) ClusterState(metrics []string, indices, masterTimeout string) (*types.ClusterState, error) {
+	return c.clientset.Cluster().State(metrics, indices, masterTimeout)
+}
+
+func (c *Client) ClusterPendingTasks() (*types.ClusterPendingTasks, error) {
+	return c.clientset.Cluster().PendingTasks()
 }
 
 func (c *Client) GetIndices(pattern string) ([]types.Index, error) {
