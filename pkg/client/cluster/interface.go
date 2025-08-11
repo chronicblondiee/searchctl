@@ -14,5 +14,5 @@ type Interface interface {
 	// New operations
 	Stats() (*types.ClusterStats, error)
 	State(metrics []string, indices string, masterTimeout string) (*types.ClusterState, error)
-	PendingTasks() (*types.PendingTasks, error)
+	PendingTasks() (*types.ClusterPendingTasks, error)
 }

@@ -175,10 +175,6 @@ func (c *client) Stats() (*types.ClusterStats, error) {
 }
 
 func (c *client) State(metrics []string, indices string, masterTimeout string) (*types.ClusterState, error) {
-	metricPath := "_all"
-	if len(metrics) > 0 {
-		metricPath = strings.Join(metrics, ",")
-	}
 	v := url.Values{}
 	if indices != "" {
 		v.Set("indices", indices)
@@ -186,7 +182,11 @@ func (c *client) State(metrics []string, indices string, masterTimeout string) (
 	if masterTimeout != "" {
 		v.Set("master_timeout", masterTimeout)
 	}
-	path := "/_cluster/state/" + metricPath
+	// Default to /_cluster/state without metrics to avoid fetching _all by default
+	path := "/_cluster/state"
+	if len(metrics) > 0 {
+		path += "/" + strings.Join(metrics, ",")
+	}
 	if len(v) > 0 {
 		path += "?" + v.Encode()
 	}
@@ -204,7 +204,7 @@ func (c *client) State(metrics []string, indices string, masterTimeout string) (
 	return &out, nil
 }
 
-func (c *client) PendingTasks() (*types.PendingTasks, error) {
+func (c *client) PendingTasks() (*types.ClusterPendingTasks, error) {
 	resp, err := c.restClient.Get("/_cluster/pending_tasks")
 	if err != nil {
 		return nil, err
@@ -212,7 +212,7 @@ func (c *client) PendingTasks() (*types.PendingTasks, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error getting pending tasks: %s", string(resp.Body))
 	}
-	var out types.PendingTasks
+	var out types.ClusterPendingTasks
 	if err := json.Unmarshal(resp.Body, &out); err != nil {
 		return nil, err
 	}

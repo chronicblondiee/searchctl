@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	cluster "github.com/chronicblondiee/searchctl/cmd/cluster"
 	"github.com/chronicblondiee/searchctl/pkg/client"
@@ -21,9 +20,9 @@ func NewClusterCmd() *cobra.Command {
 
 	cmd.AddCommand(NewClusterHealthCmd())
 	cmd.AddCommand(NewClusterInfoCmd())
-	cmd.AddCommand(NewClusterStatsCmd())
-	cmd.AddCommand(NewClusterStateCmd())
-	cmd.AddCommand(NewClusterPendingTasksCmd())
+	cmd.AddCommand(cluster.NewStatsCmd())
+	cmd.AddCommand(cluster.NewStateCmd())
+	cmd.AddCommand(cluster.NewPendingTasksCmd())
 	cmd.AddCommand(cluster.NewAllocationSettingsCmd())
 
 	return cmd
@@ -106,129 +105,4 @@ func NewClusterInfoCmd() *cobra.Command {
 	}
 
 	return cmd
-}
-
-func NewClusterStatsCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "stats",
-		Short: "Show cluster statistics",
-		Long:  "Display cluster statistics summary.",
-		Run: func(cmd *cobra.Command, args []string) {
-			c, err := client.NewClient()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating client: %v\n", err)
-				os.Exit(1)
-			}
-			stats, err := c.GetClusterStats()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting cluster stats: %v\n", err)
-				os.Exit(1)
-			}
-			// Summarize useful fields if present
-			summary := map[string]interface{}{
-				"Cluster Name": stats.ClusterName,
-			}
-			if nodes, ok := stats.Nodes["count"].(map[string]interface{}); ok {
-				if total, ok := nodes["total"]; ok {
-					summary["Nodes"] = total
-				}
-				if data, ok := nodes["data"]; ok {
-					summary["Data Nodes"] = data
-				}
-			}
-			if indices, ok := stats.Indices["shards"].(map[string]interface{}); ok {
-				if total, ok := indices["total"]; ok {
-					summary["Shards"] = total
-				}
-			}
-			formatter := output.NewFormatter(viper.GetString("output"))
-			if err := formatter.Format(summary, os.Stdout); err != nil {
-				fmt.Fprintf(os.Stderr, "Error formatting output: %v\n", err)
-				os.Exit(1)
-			}
-		},
-	}
-	return cmd
-}
-
-func NewClusterStateCmd() *cobra.Command {
-	var metrics string
-	var indices string
-	var masterTimeout string
-	cmd := &cobra.Command{
-		Use:   "state",
-		Short: "Show cluster state",
-		Long:  "Display cluster state with optional metric and index filtering.",
-		Run: func(cmd *cobra.Command, args []string) {
-			c, err := client.NewClient()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating client: %v\n", err)
-				os.Exit(1)
-			}
-			var metricList []string
-			if metrics != "" {
-				metricList = splitAndTrim(metrics)
-			}
-			st, err := c.GetClusterState(metricList, indices, masterTimeout)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting cluster state: %v\n", err)
-				os.Exit(1)
-			}
-			data := map[string]interface{}{
-				"Cluster Name": st.ClusterName,
-				"State UUID":   st.StateUUID,
-			}
-			formatter := output.NewFormatter(viper.GetString("output"))
-			if err := formatter.Format(data, os.Stdout); err != nil {
-				fmt.Fprintf(os.Stderr, "Error formatting output: %v\n", err)
-				os.Exit(1)
-			}
-		},
-	}
-	cmd.Flags().StringVar(&metrics, "metrics", "", "comma-separated metrics (e.g. metadata,routing_table,blocks,nodes)")
-	cmd.Flags().StringVar(&indices, "indices", "", "indices filter for state")
-	cmd.Flags().StringVar(&masterTimeout, "master-timeout", "", "timeout for connecting to master (e.g. 30s)")
-	return cmd
-}
-
-func NewClusterPendingTasksCmd() *cobra.Command {
-	cmd := &cobra.Command{
-		Use:   "pending-tasks",
-		Short: "Show cluster pending tasks",
-		Long:  "Display cluster pending tasks.",
-		Run: func(cmd *cobra.Command, args []string) {
-			c, err := client.NewClient()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error creating client: %v\n", err)
-				os.Exit(1)
-			}
-			pt, err := c.GetPendingTasks()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting pending tasks: %v\n", err)
-				os.Exit(1)
-			}
-			data := map[string]interface{}{
-				"Tasks": pt.Tasks,
-				"Count": len(pt.Tasks),
-			}
-			formatter := output.NewFormatter(viper.GetString("output"))
-			if err := formatter.Format(data, os.Stdout); err != nil {
-				fmt.Fprintf(os.Stderr, "Error formatting output: %v\n", err)
-				os.Exit(1)
-			}
-		},
-	}
-	return cmd
-}
-
-// splitAndTrim splits by comma and trims whitespace.
-func splitAndTrim(s string) []string {
-	var out []string
-	for _, part := range strings.Split(s, ",") {
-		p := strings.TrimSpace(part)
-		if p != "" {
-			out = append(out, p)
-		}
-	}
-	return out
 }

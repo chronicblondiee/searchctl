@@ -90,8 +90,8 @@ type ClusterState struct {
 	Nodes        map[string]interface{} `json:"nodes,omitempty"`
 }
 
-// PendingTasks represents /_cluster/pending_tasks
-type PendingTasks struct {
+// ClusterPendingTasks represents /_cluster/pending_tasks
+type ClusterPendingTasks struct {
 	Tasks []map[string]interface{} `json:"tasks"`
 }
 
