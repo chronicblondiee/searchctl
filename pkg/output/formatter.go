@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"sort"
+	"strings"
 	"text/tabwriter"
 
 	"gopkg.in/yaml.v3"
@@ -53,10 +55,24 @@ func (f *TableFormatter) formatSlice(data []interface{}, w *tabwriter.Writer) er
 	first := data[0]
 	switch first.(type) {
 	case map[string]interface{}:
-		// Extract headers from map keys
+		firstMap := first.(map[string]interface{})
+		// Extract headers from map keys, skipping internal keys starting with "__"
 		headers := make([]string, 0)
-		for k := range first.(map[string]interface{}) {
+		for k := range firstMap {
+			if len(k) >= 2 && k[:2] == "__" {
+				continue
+			}
 			headers = append(headers, k)
+		}
+		// If a preferred header order is provided via "__columns", honor it
+		if pref, ok := firstMap["__columns"]; ok {
+			ordered := orderFromPreference(pref, headers)
+			if len(ordered) > 0 {
+				headers = ordered
+			}
+		} else {
+			// Otherwise, sort headers for deterministic output
+			sort.Strings(headers)
 		}
 
 		// Print headers
@@ -85,6 +101,42 @@ func (f *TableFormatter) formatSlice(data []interface{}, w *tabwriter.Writer) er
 	}
 
 	return nil
+}
+
+// orderFromPreference builds an ordered header slice from a preference value and available headers
+// pref can be a comma-delimited string or []interface{} / []string
+func orderFromPreference(pref interface{}, available []string) []string {
+	availSet := make(map[string]struct{}, len(available))
+	for _, h := range available {
+		availSet[h] = struct{}{}
+	}
+	var desired []string
+	switch v := pref.(type) {
+	case string:
+		for _, p := range strings.Split(v, ",") {
+			p = strings.TrimSpace(p)
+			if _, ok := availSet[p]; ok {
+				desired = append(desired, p)
+			}
+		}
+	case []interface{}:
+		for _, x := range v {
+			if s, ok := x.(string); ok {
+				s = strings.TrimSpace(s)
+				if _, ok2 := availSet[s]; ok2 {
+					desired = append(desired, s)
+				}
+			}
+		}
+	case []string:
+		for _, s := range v {
+			s = strings.TrimSpace(s)
+			if _, ok := availSet[s]; ok {
+				desired = append(desired, s)
+			}
+		}
+	}
+	return desired
 }
 
 func (f *TableFormatter) formatSingle(data interface{}, w *tabwriter.Writer) error {
