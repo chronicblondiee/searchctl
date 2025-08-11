@@ -7,7 +7,6 @@
 ## Configuration Structure
 
 ```yaml
-apiVersion: v1
 kind: Config
 current-context: "production"
 contexts:
@@ -42,7 +41,6 @@ users:
 ## Configuration Sections
 
 ### Root Level
-- `apiVersion` - Configuration schema version (currently `v1`)
 - `kind` - Always `Config`
 - `current-context` - Default context to use
 
@@ -206,7 +204,6 @@ users:
 
 ### Local Development
 ```yaml
-apiVersion: v1
 kind: Config
 current-context: "local"
 contexts:
@@ -226,7 +223,6 @@ users:
 
 ### Production with TLS
 ```yaml
-apiVersion: v1
 kind: Config
 current-context: "production"
 contexts:

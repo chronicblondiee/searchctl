@@ -2,6 +2,8 @@
 
 A kubectl-like CLI for Elasticsearch and OpenSearch cluster management.
 
+For installation and setup, see the [Installation & Setup Guide](docs/installation.md).
+
 ## Quick Start
 
 ```bash
