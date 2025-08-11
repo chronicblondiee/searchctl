@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/chronicblondiee/searchctl/cmd/clone"
 	"github.com/chronicblondiee/searchctl/cmd/create"
 	"github.com/chronicblondiee/searchctl/cmd/delete"
 	"github.com/chronicblondiee/searchctl/cmd/describe"
@@ -63,6 +64,7 @@ func init() {
 	rootCmd.AddCommand(create.NewCreateCmd())
 	rootCmd.AddCommand(delete.NewDeleteCmd())
 	rootCmd.AddCommand(rollover.NewRolloverCmd())
+	rootCmd.AddCommand(clone.NewCloneCmd())
 	rootCmd.AddCommand(NewApplyCmd())
 	rootCmd.AddCommand(NewConfigCmd())
 	rootCmd.AddCommand(NewClusterCmd())

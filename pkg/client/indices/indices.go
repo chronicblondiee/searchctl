@@ -112,24 +112,28 @@ func (c *client) LifecyclePolicies() LifecyclePoliciesInterface {
 }
 
 func (c *templatesClient) List(pattern string) ([]types.IndexTemplate, error) {
-	templatePattern := "*"
-	if pattern != "" {
-		templatePattern = pattern
+	var path string
+	if pattern == "" {
+		// Some engines expect no wildcard for list-all
+		path = "/_index_template"
+	} else {
+		path = fmt.Sprintf("/_index_template/%s", pattern)
 	}
-
-	path := fmt.Sprintf("/_index_template/%s", templatePattern)
 	resp, err := c.restClient.Get(path)
 	if err != nil {
 		return nil, err
 	}
 
+	if resp.StatusCode == http.StatusNotFound {
+		return []types.IndexTemplate{}, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error getting index templates: %s", string(resp.Body))
 	}
 
 	var response struct {
 		IndexTemplates []struct {
-			Name          string             `json:"name"`
+			Name          string              `json:"name"`
 			IndexTemplate types.IndexTemplate `json:"index_template"`
 		} `json:"index_templates"`
 	}
@@ -159,7 +163,7 @@ func (c *templatesClient) Get(name string) (*types.IndexTemplate, error) {
 
 	var response struct {
 		IndexTemplates []struct {
-			Name          string             `json:"name"`
+			Name          string              `json:"name"`
 			IndexTemplate types.IndexTemplate `json:"index_template"`
 		} `json:"index_templates"`
 	}
@@ -205,24 +209,27 @@ func (c *templatesClient) Delete(name string) error {
 }
 
 func (c *componentTemplatesClient) List(pattern string) ([]types.ComponentTemplate, error) {
-	templatePattern := "*"
-	if pattern != "" {
-		templatePattern = pattern
+	var path string
+	if pattern == "" {
+		path = "/_component_template"
+	} else {
+		path = fmt.Sprintf("/_component_template/%s", pattern)
 	}
-
-	path := fmt.Sprintf("/_component_template/%s", templatePattern)
 	resp, err := c.restClient.Get(path)
 	if err != nil {
 		return nil, err
 	}
 
+	if resp.StatusCode == http.StatusNotFound {
+		return []types.ComponentTemplate{}, nil
+	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("error getting component templates: %s", string(resp.Body))
 	}
 
 	var response struct {
 		ComponentTemplates []struct {
-			Name              string                 `json:"name"`
+			Name              string                  `json:"name"`
 			ComponentTemplate types.ComponentTemplate `json:"component_template"`
 		} `json:"component_templates"`
 	}
@@ -252,7 +259,7 @@ func (c *componentTemplatesClient) Get(name string) (*types.ComponentTemplate, e
 
 	var response struct {
 		ComponentTemplates []struct {
-			Name              string                 `json:"name"`
+			Name              string                  `json:"name"`
 			ComponentTemplate types.ComponentTemplate `json:"component_template"`
 		} `json:"component_templates"`
 	}
@@ -298,19 +305,21 @@ func (c *componentTemplatesClient) Delete(name string) error {
 }
 
 func (c *lifecyclePoliciesClient) List(pattern string) ([]types.LifecyclePolicy, error) {
-	policyPattern := "*"
-	if pattern != "" {
-		policyPattern = pattern
+	// Try Elasticsearch ILM first
+	var path string
+	if pattern == "" || pattern == "*" {
+		path = "/_ilm/policy"
+	} else {
+		path = fmt.Sprintf("/_ilm/policy/%s", pattern)
 	}
-
-	// Determine if this is Elasticsearch or OpenSearch based on cluster info
-	// For now, try Elasticsearch first, then OpenSearch
-	path := fmt.Sprintf("/_ilm/policy/%s", policyPattern)
 	resp, err := c.restClient.Get(path)
-	
-	if err != nil || resp.StatusCode == http.StatusNotFound {
+	if err != nil || resp.StatusCode == http.StatusNotFound || (resp.StatusCode != http.StatusOK && strings.Contains(string(resp.Body), "no handler found")) {
 		// Try OpenSearch ISM API
-		path = fmt.Sprintf("/_plugins/_ism/policies/%s", policyPattern)
+		if pattern == "" || pattern == "*" {
+			path = "/_plugins/_ism/policies"
+		} else {
+			path = fmt.Sprintf("/_plugins/_ism/policies/%s", pattern)
+		}
 		resp, err = c.restClient.Get(path)
 		if err != nil {
 			return nil, err
@@ -345,24 +354,31 @@ func (c *lifecyclePoliciesClient) List(pattern string) ([]types.LifecyclePolicy,
 		return policies, nil
 	} else {
 		// OpenSearch ISM response format
-		var response struct {
-			Policies []struct {
-				ID     string                 `json:"_id"`
-				Policy map[string]interface{} `json:"policy"`
-			} `json:"policies"`
+		// When listing all, the response contains "policies"; when requesting a single policy,
+		// the response can contain a single object with "policy".
+		if pattern == "" || pattern == "*" || strings.HasSuffix(path, "/policies") {
+			var response struct {
+				Policies []struct {
+					ID     string                 `json:"_id"`
+					Policy map[string]interface{} `json:"policy"`
+				} `json:"policies"`
+			}
+			if err := json.Unmarshal(resp.Body, &response); err != nil {
+				return nil, err
+			}
+			var policies []types.LifecyclePolicy
+			for _, p := range response.Policies {
+				policies = append(policies, types.LifecyclePolicy{Name: p.ID, Policy: p.Policy})
+			}
+			return policies, nil
 		}
-		if err := json.Unmarshal(resp.Body, &response); err != nil {
+		var one struct {
+			Policy map[string]interface{} `json:"policy"`
+		}
+		if err := json.Unmarshal(resp.Body, &one); err != nil {
 			return nil, err
 		}
-
-		var policies []types.LifecyclePolicy
-		for _, policy := range response.Policies {
-			policies = append(policies, types.LifecyclePolicy{
-				Name:   policy.ID,
-				Policy: policy.Policy,
-			})
-		}
-		return policies, nil
+		return []types.LifecyclePolicy{{Name: pattern, Policy: one.Policy}}, nil
 	}
 }
 
@@ -370,8 +386,8 @@ func (c *lifecyclePoliciesClient) Get(name string) (*types.LifecyclePolicy, erro
 	// Try Elasticsearch first
 	path := fmt.Sprintf("/_ilm/policy/%s", name)
 	resp, err := c.restClient.Get(path)
-	
-	if err != nil || resp.StatusCode == http.StatusNotFound {
+
+	if err != nil || resp.StatusCode == http.StatusNotFound || (resp.StatusCode != http.StatusOK && strings.Contains(string(resp.Body), "no handler found")) {
 		// Try OpenSearch ISM API
 		path = fmt.Sprintf("/_plugins/_ism/policies/%s", name)
 		resp, err = c.restClient.Get(path)
@@ -424,9 +440,9 @@ func (c *lifecyclePoliciesClient) Create(name string, body map[string]interface{
 	// Try Elasticsearch first
 	path := fmt.Sprintf("/_ilm/policy/%s", name)
 	resp, err := c.restClient.Put(path, body)
-	
-	// Only fallback to OpenSearch if Elasticsearch endpoint is not found or returns method not allowed
-	if err != nil || resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusMethodNotAllowed {
+
+	// Fallback to OpenSearch if ILM endpoint is missing or unsupported
+	if err != nil || resp.StatusCode == http.StatusNotFound || resp.StatusCode == http.StatusMethodNotAllowed || (resp.StatusCode != http.StatusOK && strings.Contains(string(resp.Body), "no handler found")) {
 		// Try OpenSearch ISM API
 		path = fmt.Sprintf("/_plugins/_ism/policies/%s", name)
 		resp, err = c.restClient.Put(path, body)
@@ -446,8 +462,8 @@ func (c *lifecyclePoliciesClient) Delete(name string) error {
 	// Try Elasticsearch first
 	path := fmt.Sprintf("/_ilm/policy/%s", name)
 	resp, err := c.restClient.Delete(path)
-	
-	if err != nil || resp.StatusCode == http.StatusNotFound {
+
+	if err != nil || resp.StatusCode == http.StatusNotFound || (resp.StatusCode != http.StatusOK && strings.Contains(string(resp.Body), "no handler found")) {
 		// Try OpenSearch ISM API
 		path = fmt.Sprintf("/_plugins/_ism/policies/%s", name)
 		resp, err = c.restClient.Delete(path)

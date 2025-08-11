@@ -186,3 +186,8 @@ type LifecyclePolicy struct {
 	Version      int                    `json:"version,omitempty"`
 	ModifiedDate string                 `json:"modified_date,omitempty"`
 }
+
+type IngestPipeline struct {
+	Name string                 `json:"name"`
+	Body map[string]interface{} `json:"body"`
+}

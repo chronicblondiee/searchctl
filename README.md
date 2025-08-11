@@ -122,6 +122,21 @@ searchctl version                               # Show version
 searchctl version -o json                      # Version as JSON
 ```
 
+### Clone and Import Configuration
+```bash
+# Export all configuration as YAML into /backup
+searchctl clone export --all --dir /backup -o yaml
+
+# Export only templates and ILM/ISM matching patterns
+searchctl clone export --types index-templates,component-templates,lifecycle-policies --names logs-*,base-* --dir /backup -o json
+
+# Import everything found in /backup (order-aware)
+searchctl clone import --dir /backup
+
+# Dry-run import of only ILM and pipelines
+searchctl clone import --types lifecycle-policies,ingest-pipelines --dir /backup --dry-run
+```
+
 **Global Flags:** `--config`, `--context`, `--output` (table|json|yaml|wide), `--dry-run`, `--verbose`
 
 ### Quick Reference - Template Aliases

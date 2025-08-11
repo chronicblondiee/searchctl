@@ -33,13 +33,15 @@ type SearchClient interface {
 	GetLifecyclePolicy(name string) (*types.LifecyclePolicy, error)
 	CreateLifecyclePolicy(name string, body map[string]interface{}) error
 	DeleteLifecyclePolicy(name string) error
-
-	// Shards & allocation
 	GetShards(pattern string) ([]types.CatShardRow, error)
 	ExplainAllocation(req types.AllocationExplainRequest, includeYes, includeDisk bool) (*types.AllocationExplainResponse, error)
 	Reroute(commands []types.RerouteCommand, opts types.RerouteOptions) (*types.RerouteResponse, error)
 	GetClusterSettings() (*types.ClusterSettings, error)
 	UpdateClusterSettings(body map[string]interface{}) error
+	GetIngestPipelines(pattern string) ([]types.IngestPipeline, error)
+	GetIngestPipeline(name string) (*types.IngestPipeline, error)
+	CreateIngestPipeline(name string, body map[string]interface{}) error
+	DeleteIngestPipeline(name string) error
 }
 
 type Client struct {
@@ -187,4 +189,20 @@ func (c *Client) GetClusterSettings() (*types.ClusterSettings, error) {
 
 func (c *Client) UpdateClusterSettings(body map[string]interface{}) error {
 	return c.clientset.Cluster().UpdateSettings(body)
+}
+
+func (c *Client) GetIngestPipelines(pattern string) ([]types.IngestPipeline, error) {
+	return c.clientset.Ingest().List(pattern)
+}
+
+func (c *Client) GetIngestPipeline(name string) (*types.IngestPipeline, error) {
+	return c.clientset.Ingest().Get(name)
+}
+
+func (c *Client) CreateIngestPipeline(name string, body map[string]interface{}) error {
+	return c.clientset.Ingest().Create(name, body)
+}
+
+func (c *Client) DeleteIngestPipeline(name string) error {
+	return c.clientset.Ingest().Delete(name)
 }

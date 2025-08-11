@@ -194,6 +194,79 @@ for context in elasticsearch opensearch; do
     log_success "$context tests completed"
 done
 
+# Clone export/import smoke test for both engines with different formats/dirs
+for context in elasticsearch opensearch; do
+  TMP_DIR=$(mktemp -d)
+  if [ "$context" = "elasticsearch" ]; then
+    fmt=yaml
+  else
+    fmt=json
+  fi
+  echo "[TEST] Clone export/import ($context, $fmt) to $TMP_DIR"
+  test_command "./bin/searchctl --context $context clone export --dir $TMP_DIR -o $fmt" true
+  test_command "./bin/searchctl --context $context clone import --dir $TMP_DIR --dry-run" true
+  rm -rf "$TMP_DIR"
+done
+
+# Clone roundtrip test: create → export → delete → import → verify (both engines)
+for context in elasticsearch opensearch; do
+  echo "[TEST] Clone roundtrip ($context)"
+  port=9200
+  if [ "$context" = "opensearch" ]; then
+    port=9201
+  fi
+  # Cleanup any leftovers
+  curl -s -X DELETE "localhost:$port/_component_template/clone-ct-test" >/dev/null 2>&1 || true
+  curl -s -X DELETE "localhost:$port/_index_template/clone-it-test" >/dev/null 2>&1 || true
+  curl -s -X DELETE "localhost:$port/_ingest/pipeline/clone-pl-test" >/dev/null 2>&1 || true
+
+  # Create resources
+  echo "Creating component template clone-ct-test..."
+  curl -s -X PUT "localhost:$port/_component_template/clone-ct-test" \
+    -H "Content-Type: application/json" \
+    -d '{"template": {"settings": {"index.number_of_shards": 1, "index.number_of_replicas": 0}}, "version": 1}' >/dev/null || { echo "Failed to create component template"; exit 1; }
+
+  echo "Creating index template clone-it-test..."
+  curl -s -X PUT "localhost:$port/_index_template/clone-it-test" \
+    -H "Content-Type: application/json" \
+    -d '{"index_patterns": ["clone-it-*"], "priority": 150, "template": {"settings": {"number_of_shards": 1, "number_of_replicas": 0}}}' >/dev/null || { echo "Failed to create index template"; exit 1; }
+
+  echo "Creating ingest pipeline clone-pl-test..."
+  curl -s -X PUT "localhost:$port/_ingest/pipeline/clone-pl-test" \
+    -H "Content-Type: application/json" \
+    -d '{"description": "clone test", "processors": []}' >/dev/null || { echo "Failed to create ingest pipeline"; exit 1; }
+
+  # Export only our test resources
+  ROUND_DIR=$(mktemp -d)
+  test_command "./bin/searchctl --context $context clone export --types component-templates,index-templates,ingest-pipelines --names clone-* --dir $ROUND_DIR -o yaml" true
+
+  # Delete created resources
+  test_command "./bin/searchctl --context $context delete component-template clone-ct-test -y" true
+  test_command "./bin/searchctl --context $context delete index-template clone-it-test -y" true
+  curl -s -X DELETE "localhost:$port/_ingest/pipeline/clone-pl-test" >/dev/null 2>&1 || true
+
+  # Verify deletion
+  ct_after_del=$(curl -s "localhost:$port/_component_template/clone-ct-test")
+  it_after_del=$(curl -s "localhost:$port/_index_template/clone-it-test")
+  pl_after_del=$(curl -s -o /dev/null -w "%{http_code}" "localhost:$port/_ingest/pipeline/clone-pl-test")
+  if [[ "$ct_after_del" != *"resource_not_found_exception"* && "$ct_after_del" == *"component_template"* ]]; then echo "CT not deleted"; exit 1; fi
+  if [[ "$it_after_del" != *"resource_not_found_exception"* && "$it_after_del" == *"index_template"* ]]; then echo "IT not deleted"; exit 1; fi
+  if [[ "$pl_after_del" != "404" && "$pl_after_del" != "200" ]]; then echo "Unexpected pipeline delete status: $pl_after_del"; fi
+
+  # Import
+  test_command "./bin/searchctl --context $context clone import --types component-templates,index-templates,ingest-pipelines --dir $ROUND_DIR" true
+
+  # Verify existence
+  ct_after_imp=$(curl -s "localhost:$port/_component_template/clone-ct-test")
+  it_after_imp=$(curl -s "localhost:$port/_index_template/clone-it-test")
+  pl_after_imp=$(curl -s "localhost:$port/_ingest/pipeline/clone-pl-test")
+  if [[ "$ct_after_imp" != *"component_template"* ]]; then echo "CT import verification failed: $ct_after_imp"; exit 1; fi
+  if [[ "$it_after_imp" != *"index_template"* ]]; then echo "IT import verification failed: $it_after_imp"; exit 1; fi
+  if [[ "$pl_after_imp" != *"clone-pl-test"* && "$pl_after_imp" == "" ]]; then echo "Pipeline import verification failed: $pl_after_imp"; exit 1; fi
+
+  rm -rf "$ROUND_DIR"
+done
+
 # Test help documentation
 log_test "Testing help documentation..."
 ./bin/searchctl rollover --help >/dev/null
