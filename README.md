@@ -82,6 +82,15 @@ searchctl cluster health                        # Show cluster health
 searchctl cluster info                          # Show cluster information
 searchctl cluster health -o json                # Health as JSON
 
+# Cluster stats
+searchctl cluster stats                         # Summary (nodes, shards, store, JVM)
+searchctl cluster stats --raw -o json           # Full stats payload as JSON
+
+# Cluster state
+searchctl cluster state                         # Default summary (metadata, routing, nodes, blocks)
+searchctl cluster state --metrics metadata,routing_table   # Filtered summary
+searchctl cluster state --raw -o json           # Full state payload as JSON
+
 # Allocation settings
 searchctl cluster allocation-settings           # Get current settings
 searchctl cluster allocation-settings -o yaml   # As YAML
