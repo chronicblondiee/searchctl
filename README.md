@@ -21,6 +21,11 @@ searchctl get indices --context production -o json
 searchctl get indices                           # List all indices
 searchctl get indices logs-*                    # List indices matching pattern
 searchctl get nodes                             # List cluster nodes
+searchctl get nodes --role data                 # Filter by role (data, master, ingest, etc.)
+searchctl get nodes --name es-data-0            # Filter by name or IP substring
+searchctl get nodes --sort CPU,HEAP.PERCENT --desc --limit 10    # Sort and limit
+searchctl get nodes --columns NAME,IP,CPU,HEAP.PERCENT           # Choose columns
+searchctl get nodes -o wide                     # Wide output adds LOAD_5M, LOAD_15M
 searchctl get datastreams                       # List data streams
 searchctl get datastreams logs-* -o json        # List with JSON output
 searchctl get index-templates                   # List index templates
