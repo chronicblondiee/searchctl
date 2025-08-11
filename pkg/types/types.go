@@ -72,6 +72,29 @@ type ClusterSettings struct {
 	Transient  map[string]interface{} `json:"transient"`
 }
 
+// ClusterStats is a lightweight representation of /_cluster/stats
+// Keep nested structures loosely typed to accommodate ES/OS differences without heavy typing.
+type ClusterStats struct {
+	ClusterName string                 `json:"cluster_name"`
+	Indices     map[string]interface{} `json:"indices"`
+	Nodes       map[string]interface{} `json:"nodes"`
+}
+
+// ClusterState represents /_cluster/state with optional metric filtering
+type ClusterState struct {
+	ClusterName  string                 `json:"cluster_name"`
+	StateUUID    string                 `json:"state_uuid"`
+	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	RoutingTable map[string]interface{} `json:"routing_table,omitempty"`
+	Blocks       map[string]interface{} `json:"blocks,omitempty"`
+	Nodes        map[string]interface{} `json:"nodes,omitempty"`
+}
+
+// PendingTasks represents /_cluster/pending_tasks
+type PendingTasks struct {
+	Tasks []map[string]interface{} `json:"tasks"`
+}
+
 type Index struct {
 	Name             string `json:"index"`
 	Health           string `json:"health"`
