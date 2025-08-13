@@ -7,9 +7,22 @@ filebeat.autodiscover:
       type: filestream
       paths:
       - /var/log/containers/*${data.kubernetes.container.id}.log
+      parsers:
+      - container:
+          stream: all
 
 processors:
 - add_kubernetes_metadata: ~
+- decode_json_fields:
+    fields: [ "message" ]
+    process_array: true
+    max_depth: 5
+    target: ""
+    overwrite_keys: true
+    add_error_key: true
+    when:
+      regexp:
+        message: '^\{'
 - add_fields:
     target: data_stream
     fields:
@@ -54,3 +67,13 @@ output.elasticsearch:
 #    pretty: false
 
 logging.level: info
+logging.json: true
+logging.files:
+  path: /var/log/filebeat
+  name: filebeat
+  keepfiles: 7
+  rotateeverybytes: 10485760
+
+http.enabled: true
+http.host: 0.0.0.0
+http.port: 5066
