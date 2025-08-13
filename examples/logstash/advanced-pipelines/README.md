@@ -1,4 +1,4 @@
-# Advanced Multi-Pipeline Examples
+# Advanced Multi-Pipeline Examples (8.19)
 
 These examples demonstrate Logstash pipeline-to-pipeline (P2P) routing to build a modular pipeline graph.
 
@@ -33,7 +33,7 @@ Directory layout:
 - `pipeline-errors.conf`: error sink output
 
 Prerequisites:
-- Logstash 7.14+
+- Logstash 8.19 (bundled JDK 17 recommended)
 - Plugins: `logstash-output-elasticsearch`, `logstash-filter-geoip`, `logstash-filter-useragent`
 - Apply templates (recommended):
   - `searchctl apply -f examples/component-templates/base-settings.yaml`
@@ -67,6 +67,10 @@ Notes:
 - Outputs are data-stream based and derive `data_stream.*` from upstream routing. Adjust routing rules in `pipeline-route.conf`.
 - On parse failures, events are routed to `pipeline-errors.conf` and indexed into `logs-ingest.errors`.
 - Consider enabling persistent queues for durability in production.
+
+Security and cloud tips:
+- For HTTPS Elasticsearch endpoints, provide `cacert => "${ES_CACERT}"` in `elasticsearch {}` and set `ES_CACERT` to your CA file.
+- For Elastic Cloud/Serverless, prefer API keys on port 443 and remove basic auth credentials.
 
 ## How this configuration works
 

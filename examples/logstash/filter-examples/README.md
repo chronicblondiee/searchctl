@@ -1,4 +1,4 @@
-# Logstash Filter Examples
+# Logstash Filter Examples (8.19)
 
 This directory contains Logstash pipelines that focus on filter examples for common log types. Inputs are minimal (often Beats or Syslog), and outputs default to Elasticsearch data streams to align with the templates in `examples/`.
 
@@ -18,3 +18,5 @@ logstash --path.settings examples/logstash/filter-examples --config.reload.autom
 Notes:
 - Inputs use environment variables and can be swapped (e.g., Beats vs Kafka).
 - Outputs are configured for data streams. Adjust `data_stream_dataset` to match your workload.
+- For HTTPS outputs, set `ES_CACERT` and add `cacert => "${ES_CACERT}"` in the `elasticsearch {}` block if needed.
+- For Elastic Cloud or Serverless, prefer API keys with `api_key => "${ES_API_KEY}"` on port 443.

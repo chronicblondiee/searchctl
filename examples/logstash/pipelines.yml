@@ -1,4 +1,4 @@
-# Example multi-pipeline configuration for Logstash
+# Example multi-pipeline configuration for Logstash 8.19
 # Run with: logstash --path.settings examples/logstash --config.reload.automatic
 
 - pipeline.id: filebeat
