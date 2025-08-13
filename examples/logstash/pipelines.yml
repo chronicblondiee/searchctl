@@ -1,0 +1,17 @@
+# Example multi-pipeline configuration for Logstash
+# Run with: logstash --path.settings examples/logstash --config.reload.automatic
+
+- pipeline.id: filebeat
+  path.config: pipeline-filebeat.conf
+
+- pipeline.id: kafka
+  path.config: pipeline-kafka.conf
+
+- pipeline.id: syslog
+  path.config: pipeline-syslog.conf
+
+- pipeline.id: http
+  path.config: pipeline-http.conf
+
+- pipeline.id: stdin
+  path.config: pipeline-stdin.conf
