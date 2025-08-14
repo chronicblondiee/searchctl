@@ -1,0 +1,28 @@
+filters_apache_access:
+  workers: ${FILTER_WORKERS:2}
+  delay: ${FILTER_DELAY_MS:100}
+  source:
+    http:
+      port: ${FILTER_APACHE_HTTP_PORT:2121}
+  processor:
+  - grok:
+      match:
+        message: [ "%{COMBINEDAPACHELOG}" ]
+      tag_on_failure: [ "_grok_apache_failure" ]
+  - rename_keys:
+      mappings:
+        clientip: source.ip
+  - user_agent:
+      source: agent
+      target: user_agent
+  - geoip:
+      source: source.ip
+      target: geoip
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_FILTER_APACHE:logs-apache-access}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}

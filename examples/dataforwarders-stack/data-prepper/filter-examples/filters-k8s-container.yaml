@@ -1,0 +1,28 @@
+filters_k8s_container:
+  workers: ${FILTER_WORKERS:2}
+  delay: ${FILTER_DELAY_MS:100}
+  source:
+    http:
+      port: ${FILTER_K8S_HTTP_PORT:2123}
+  processor:
+  - dissect:
+      patterns:
+        message: "%{ts->} %{stream} %{flags} %{log}"
+      add_tags: [ "_cri_dissect" ]
+  - date:
+      match: [ "ts", "ISO8601" ]
+      target: "@timestamp"
+  - json:
+      source: log
+      target: ""
+      ignore_invalid_json: true
+  - remove_keys:
+      keys: [ "flags", "host", "@version" ]
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_FILTER_K8S:logs-kubernetes-container}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}

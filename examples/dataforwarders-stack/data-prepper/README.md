@@ -7,7 +7,7 @@ Requirements
 - OpenSearch 2.x/3.x endpoint reachable from Data Prepper
 
 Files
-- `pipelines.yaml`: Multiple named pipelines (`http_ingest`, `kafka`, `syslog_like`, `stdin_like`, `beats_like`)
+- `pipelines.yaml`: Multiple named pipelines (`http_ingest`, `kafka`, `syslog_like`, `stdin_like`, `beats_like`, `kafka_dual`, `filters_*`)
 
 Run Data Prepper with Docker
 
@@ -32,6 +32,24 @@ Notes
 - The container image looks for `pipelines/pipelines.yaml` by default; we mount our file there.
 - These examples use HTTP sources for easy local testing. For production, enable TLS and auth on sources and avoid exposing them publicly.
 - If you use AWS/OpenSearch Service, prefer secrets managers/IAM for credentials and private networking.
+
+Filter examples (Data Prepper)
+
+Each `filters_*` pipeline exposes a dedicated HTTP port and demonstrates parsing/enrichment similar to the Logstash examples:
+
+- `filters_syslog_auth` on 2124: syslog auth lines → grok → date → OpenSearch index `logs-syslog-auth`
+- `filters_apache_access` on 2121: Apache combined log → grok + rename `clientip` → user_agent → geoip → `logs-apache-access`
+- `filters_json_app` on 2122: JSON parse from `message` → date normalize → lowercase level → rename host → `logs-app-json`
+- `filters_k8s_container` on 2123: dissect CRI line → date → JSON parse inner → remove temp fields → `logs-kubernetes-container`
+- `filters_nginx_access` on 2125: nginx access → grok + UA + geoip → `logs-nginx-access`
+- `filters_nginx_ingress` on 2126: nginx ingress → grok + UA + geoip → `logs-nginx-ingress`
+
+Example curl (Apache access):
+```bash
+curl -sS -X POST "http://localhost:2121" \
+  -H 'Content-Type: text/plain' \
+  --data-binary '127.0.0.1 - - [10/Oct/2000:13:55:36 -0700] "GET /apache_pb.gif HTTP/1.0" 200 2326 "http://www.example.com/start.html" "Mozilla/4.08 [en] (Win98; I ;Nav)"'
+```
 
 Testing the HTTP pipelines
 
@@ -79,6 +97,17 @@ export KAFKA_BOOTSTRAP_SERVERS=localhost:9092
 export KAFKA_TOPICS=logs
 export KAFKA_GROUP_ID=data-prepper
 ```
+
+Advanced: Kafka → OpenSearch and Elasticsearch (dual sinks)
+
+- Set additional environment variables for Elasticsearch:
+```bash
+export ELASTICSEARCH_HOSTS=https://localhost:9201
+export ELASTICSEARCH_USERNAME=elastic
+export ELASTICSEARCH_PASSWORD=changeme
+```
+
+- Run the `kafka_dual` pipeline by selecting it in `pipelines.yaml` (it is already defined). This sends the same records to OpenSearch and Elasticsearch with separate sink configs and indexes.
 
 OpenSearch index naming
 

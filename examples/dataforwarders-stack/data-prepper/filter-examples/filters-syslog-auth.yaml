@@ -1,0 +1,28 @@
+filters_syslog_auth:
+  workers: ${FILTER_WORKERS:2}
+  delay: ${FILTER_DELAY_MS:100}
+  source:
+    http:
+      port: ${FILTER_SYSLOG_HTTP_PORT:2124}
+  processor:
+    - grok:
+        match:
+          message: ["%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sshd\[%{NUMBER:pid}\]: %{GREEDYDATA:sshd_message}",
+                    "%{SYSLOGTIMESTAMP:syslog_timestamp} %{HOSTNAME:host} sudo\[%{NUMBER:pid}\]: %{GREEDYDATA:sudo_message}"]
+    - grok:
+        match:
+          sshd_message: ["Accepted %{WORD:ssh_method} for %{USERNAME:user.name} from %{IP:source.ip} port %{NUMBER:source.port:int}"]
+        tag_on_failure: ["_grok_sshd_parse_failure"]
+    - date:
+        from_time_received: false
+        match: ["syslog_timestamp", "MMM  d HH:mm:ss", "MMM dd HH:mm:ss"]
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_FILTER_SYSLOG:logs-syslog-auth}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+
+

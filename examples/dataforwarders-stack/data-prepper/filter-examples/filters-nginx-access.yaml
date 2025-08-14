@@ -1,0 +1,28 @@
+filters_nginx_access:
+  workers: ${FILTER_WORKERS:2}
+  delay: ${FILTER_DELAY_MS:100}
+  source:
+    http:
+      port: ${FILTER_NGINX_HTTP_PORT:2125}
+  processor:
+  - grok:
+      match:
+        message: [ "%{IPORHOST:clientip} - %{DATA:ident} %{DATA:auth} \\[ %{HTTPDATE:nginx.access.time} \\] \"%{WORD:verb} %{DATA:request} HTTP/%{NUMBER:httpversion}\" %{NUMBER:response:int} %{NUMBER:bytes:int} \"%{DATA:referrer}\" \"%{DATA:agent}\"" ]
+      tag_on_failure: [ "_grok_nginx_failure" ]
+  - rename_keys:
+      mappings:
+        clientip: source.ip
+  - user_agent:
+      source: agent
+      target: user_agent
+  - geoip:
+      source: source.ip
+      target: geoip
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_FILTER_NGINX:logs-nginx-access}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
