@@ -9,6 +9,9 @@ Pipelines included:
 - `pipeline-syslog-auth.conf` – Syslog auth (grok for sshd)
 - `pipeline-k8s-container.conf` – Kubernetes container logs (dissect + date)
 - `pipeline-nginx-ingress.conf` – Nginx Ingress controller logs (grok + useragent + geoip)
+- `pipeline-log-type-detector.conf` – Detects multiple formats (apache/nginx/ingress/syslog/k8s/json); applies parsing and tags with `log_type:*`
+- `pipeline-log-level-detector.conf` – Detects JSON / key-value / line logs, extracts `level` from `message`, and drops DEBUG/debug
+- `pipeline-unified-log-parser.conf` – Unified pipeline (JSON, KV, Serilog, line logs) with level extraction and normalization
 
 Run:
 ```bash

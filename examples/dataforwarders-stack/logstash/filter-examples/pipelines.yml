@@ -15,3 +15,12 @@
 
 - pipeline.id: nginx-ingress
   path.config: pipeline-nginx-ingress.conf
+
+- pipeline.id: log-type-detector
+  path.config: pipeline-log-type-detector.conf
+
+- pipeline.id: log-level-detector
+  path.config: pipeline-log-level-detector.conf
+
+- pipeline.id: unified-log-parser
+  path.config: pipeline-unified-log-parser.conf
