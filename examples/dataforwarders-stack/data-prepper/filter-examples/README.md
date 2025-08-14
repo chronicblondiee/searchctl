@@ -21,8 +21,9 @@ Examples
 - `filters-nginx-access.yaml`: nginx access → grok + user_agent + geoip
 - `filters-nginx-ingress.yaml`: nginx ingress → grok + user_agent + geoip
 - `filters-syslog-auth.yaml`: syslog auth lines → grok → date
+- `filters-log-type-detector.yaml`: detects common formats (apache/nginx/nginx-ingress/syslog/k8s/json) and applies per-type parsing, adds `log_type:*` tag
 
 Combined file
-- `pipelines.yaml` includes all `filters_*` pipelines for convenience. Expose all ports: 2121–2126.
+- `pipelines.yaml` includes all `filters_*` pipelines for convenience. Expose all ports: 2121–2126, 2130.
 
 

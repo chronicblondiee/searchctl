@@ -1,0 +1,52 @@
+filters_log_level_detector:
+  workers: ${FILTER_WORKERS:2}
+  delay: ${FILTER_DELAY_MS:100}
+  source:
+    http:
+      port: ${FILTER_LEVEL_HTTP_PORT:2131}
+  processor:
+    # Try to parse JSON from message; ignore failures to allow fallback
+    - json:
+        source: message
+        target: ""
+        ignore_invalid_json: true
+    # Extract level from common KV-style fields in the message
+    - grok:
+        match:
+          message: [
+            ".*level=%{LOGLEVEL:level}.*",
+            ".*lvl=%{LOGLEVEL:level}.*",
+            ".*severity=%{LOGLEVEL:level}.*"
+          ]
+        tag_on_failure: ["_no_kv_level"]
+    # Heuristics for line logs: timestamp + level + text
+    - grok:
+        match:
+          message: [
+            "%{TIMESTAMP_ISO8601:ts} %{LOGLEVEL:level} %{GREEDYDATA:log_message}",
+            "%{TIMESTAMP_ISO8601:ts} \[%{LOGLEVEL:level}\] %{GREEDYDATA:log_message}",
+            "\[%{LOGLEVEL:level}\] %{GREEDYDATA:log_message}"
+          ]
+        tag_on_failure: ["_no_line_level"]
+    - date:
+        match: ["ts", "ISO8601"]
+        target: "@timestamp"
+    # Normalize level to lowercase
+    - lowercase_strings:
+        keys: ["level"]
+    # Drop DEBUG/debug logs
+    - drop_events:
+        when:
+          equals:
+            - ${level}
+            - "debug"
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_FILTER_LEVEL:logs-level-detected}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+
+
