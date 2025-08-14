@@ -1,0 +1,17 @@
+- pipeline.id: nginx-access
+  path.config: pipeline-nginx-access.conf
+
+- pipeline.id: apache-access
+  path.config: pipeline-apache-access.conf
+
+- pipeline.id: json-app
+  path.config: pipeline-json-app.conf
+
+- pipeline.id: syslog-auth
+  path.config: pipeline-syslog-auth.conf
+
+- pipeline.id: k8s-container
+  path.config: pipeline-k8s-container.conf
+
+- pipeline.id: nginx-ingress
+  path.config: pipeline-nginx-ingress.conf

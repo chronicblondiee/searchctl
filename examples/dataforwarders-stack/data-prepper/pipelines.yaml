@@ -1,0 +1,89 @@
+# Example Data Prepper pipelines mirroring Logstash examples
+# Run with Docker (see README) or local Data Prepper install
+
+http_ingest:
+  workers: ${HTTP_WORKERS:2}
+  delay: ${HTTP_DELAY_MS:100}
+  source:
+    http:
+      port: ${HTTP_PORT:2021}
+      request_timeout: ${HTTP_REQUEST_TIMEOUT_MS:30000}
+      max_request_size: ${HTTP_MAX_REQUEST_BYTES:1048576}
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_HTTP:logs-http-ingest}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+      bulk_size: ${OS_BULK_SIZE_MB:5}
+      max_retries: ${OS_MAX_RETRIES:3}
+
+kafka:
+  workers: ${KAFKA_WORKERS:2}
+  delay: ${KAFKA_DELAY_MS:100}
+  source:
+    kafka:
+      bootstrap_servers: "${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}"
+      topics: [ "${KAFKA_TOPICS:logs}" ]
+      group_id: "${KAFKA_GROUP_ID:data-prepper}"
+      auto_offset_reset: "${KAFKA_AUTO_OFFSET_RESET:latest}"
+      # If your payloads are JSON, set this to true to parse bodies
+      deserialize_json: ${KAFKA_JSON:true}
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_KAFKA:logs-kafka-generic}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+
+stdin_like:
+  workers: ${STDIN_WORKERS:1}
+  delay: ${STDIN_DELAY_MS:100}
+  # Data Prepper does not have a stdin source; emulate via dedicated HTTP port
+  source:
+    http:
+      port: ${STDIN_HTTP_PORT:2023}
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_STDIN:logs-stdin-generic}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+
+syslog_like:
+  workers: ${SYSLOG_WORKERS:2}
+  delay: ${SYSLOG_DELAY_MS:100}
+  # Data Prepper may not provide a native syslog source. Use HTTP.
+  source:
+    http:
+      port: ${SYSLOG_HTTP_PORT:2024}
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_SYSLOG:logs-syslog-rfc3164}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
+
+beats_like:
+  workers: ${BEATS_WORKERS:2}
+  delay: ${BEATS_DELAY_MS:100}
+  # Emulate Beats via HTTP JSON intake on a separate port
+  source:
+    http:
+      port: ${BEATS_HTTP_PORT:2022}
+  sink:
+  - opensearch:
+      hosts: [ "${OPENSEARCH_HOSTS:https://localhost:9200}" ]
+      username: "${OPENSEARCH_USERNAME:admin}"
+      password: "${OPENSEARCH_PASSWORD:admin}"
+      index: "${OS_INDEX_BEATS:logs-filebeat-generic}"
+      ssl: ${OS_SSL:true}
+      insecure: ${OS_INSECURE:false}
